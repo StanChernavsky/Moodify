@@ -1,15 +1,75 @@
 import json
 import numpy as np
 from pprint import pprint
+import sys
+import spotipy
+import spotipy.util as util
 
-playlists = []
-playlists.append(json.load(open('seed.json')))
-playlists.append(json.load(open('seed2.json')))
-playlists.append(json.load(open('seed3.json')))
+# for testing without oauth
+# playlists = []
+# playlists.append(json.load(open('seed.json')))
+# playlists.append(json.load(open('seed2.json')))
+# playlists.append(json.load(open('seed3.json')))
 
-
-track = json.load(open('track.json'))
+# track = json.load(open('track.json'))
 audio_features_list = ['danceability', 'valence', 'energy', 'tempo']
+
+
+
+
+def getTrackIds(tracks):
+    track_ids = []
+    for i, item in enumerate(tracks['items']):
+        track = item['track']
+        track_ids.append(track['id'])
+    return track_ids
+
+# returns a dict of playlist ID to a list of track IDs
+def process_playlists(username, playlists):
+    all_playlists = {}
+    for playlist in playlists['items']:
+        if playlist['owner']['id'] == username:
+            if playlist['id'] not in all_playlists:
+                all_playlists[playlist['id']] = []
+            print
+            print playlist['name']
+            print '  total tracks', playlist['tracks']['total']
+            results = sp.user_playlist(username, playlist['id'],
+                fields="tracks,next")
+            tracks = results['tracks']
+            all_playlists[playlist['id']] = getTrackIds(tracks)
+            while tracks['next']:
+                tracks = sp.next(tracks)
+                all_playlists[playlist['id']].append(getTrackIds(tracks))
+    print "************************************************"
+    return all_playlists
+
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        username = sys.argv[1]
+    else:
+        print "Whoops, need your username!"
+        print "usage: python user_playlists.py [username]"
+        sys.exit()
+
+    token = util.prompt_for_user_token(username)
+
+    if token:
+        sp = spotipy.Spotify(auth=token)
+        playlists = sp.user_playlists(username)
+        processed_playlists = process_playlists(username, playlists)
+        # run_clustering(processed_playlists)
+        # print playlists
+        # centroids = assignCentroids(playlists['items'])
+    else:
+        print "Can't get token for", username
+
+
+
+
+
 
 # playlist: dictionary loaded from json file
 def computeAverageAndVariance(playlist):
@@ -47,37 +107,40 @@ def computeDistance(avg_var_list, variance_importance_dict, track, weights):
         sum_so_far += weight*(avg_var_dict[feature][0] - track[feature])**2
     return sum_so_far**0.5
    
-weights = [.5, .3, .1, .1] 
+def assignCentroids(playlists):
+    weights = [.5, .3, .1, .1] 
 
-avg_var_dicts = []
+    avg_var_dicts = []
 
-for playlist in playlists:
-    avg_var_dicts.append(computeAverageAndVariance(playlist))
+    for playlist in playlists:
+        avg_var_dicts.append(computeAverageAndVariance(playlist))
 
-distances = []
-minDist = float('inf')
-minIdx = -1
-print avg_var_dicts
-print "---------------------- PRINTING LENGTH", len(avg_var_dicts)
-for i, avg_var_dict in enumerate(avg_var_dicts):
+    distances = []
+    minDist = float('inf')
+    minIdx = -1
+    return avg_var_dicts
 
-    variances = [(feature, avg_var_dict[feature][1]) for feature in avg_var_dict]
-    sorted_list_variances = sorted(variances, key=lambda x: x[1])
+def assignTrackToCentroid(track, playlist_centroids):
+    print "---------------------- # OF PLAYLISTS:", len(avg_var_dicts), "-------------------"
+    for i, playlist_centroid in enumerate(playlist_centroids):
 
-    variance_importance_dict = {}
-    for j, (feature, variance) in enumerate(sorted_list_variances):
-        variance_importance_dict[feature] = j
+        variances = [(feature, playlist_centroid[feature][1]) for feature in playlist_centroid]
+        sorted_list_variances = sorted(variances, key=lambda x: x[1])
 
-    dist = computeDistance(avg_var_dict, variance_importance_dict, track, weights)
-    distances.append(dist)
-    if minDist > dist:
-        print minIdx, i
-        minIdx = i
-        minDist = dist
+        variance_importance_dict = {}
+        for j, (feature, variance) in enumerate(sorted_list_variances):
+            variance_importance_dict[feature] = j
+
+        dist = computeDistance(playlist_centroid, variance_importance_dict, track, weights)
+        distances.append(dist)
+        if minDist > dist:
+            print minIdx, i
+            minIdx = i
+            minDist = dist
 
 
-print sorted(distances)[0]
-print minIdx
+    print sorted(distances)[0]
+    print minIdx
 
 
 
