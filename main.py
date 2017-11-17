@@ -89,7 +89,7 @@ def computeAverageAndVariance(playlist):
     features = {}
     # print "printing playlist-----------------------"
     # print playlist
-    
+
     for track in playlist:
         # print track['name']
         for feature in track: # each track is made up of only features
@@ -117,13 +117,14 @@ def computeDistance(avg_var_list, variance_importance_dict, track, weights):
             continue
         importance_idx = variance_importance_dict[feature]
         weight = weights[importance_idx]
-        sum_so_far += weight*(avg_var_dict[feature][0] - track[feature])**2
+        # sum_so_far += weight*(avg_var_dict[feature][0] - track[feature])**2
+        sum_so_far += (avg_var_dict[feature][0] - track[feature])**2) / (avg_var_dict[feature][1]**2)
     return sum_so_far**0.5
-   
+
 
 # assumes that playlists is a list of list of tracks
 def assignCentroids(playlists):
-    weights = [.5, .3, .1, .1] 
+    weights = [.5, .3, .1, .1]
 
     avg_var_dicts = []
 
@@ -143,6 +144,7 @@ def assignTrackToCentroid(track, playlist_centroids):
         sorted_list_variances = sorted(variances, key=lambda x: x[1])
 
         variance_importance_dict = {}
+
         for j, (feature, variance) in enumerate(sorted_list_variances):
             variance_importance_dict[feature] = j
 
@@ -153,10 +155,15 @@ def assignTrackToCentroid(track, playlist_centroids):
             minIdx = i
             minDist = dist
 
-
     print sorted(distances)[0]
     print minIdx
 
+def computeNewCentroids():
+    #loop through all the songs and come up with K centroids
+    #update the list of playlits according to the new centroids
 
 
-
+# get assignments for all the input songs and save the assignments in the list
+# compare the assignment with the previous assignment list
+# if same, we converge
+# computeNewCentroids() to update the list of playlist
