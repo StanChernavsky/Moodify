@@ -13,9 +13,10 @@ import spotipy.util as util
 
 # track = json.load(open('track.json'))
 audio_features_list = ['danceability', 'valence', 'energy', 'tempo']
-
-
-
+MAX_ITERS = 100
+K = 4
+centroids = {}
+playlist_for_centroid = []
 
 def getTrackIds(tracks):
     track_ids = []
@@ -45,10 +46,12 @@ def process_playlists(username, playlists):
     return all_playlists
 
 # dict from playlist to track IDs
+# return: dict from playlist to a list of audio features
 def get_audio_features_for_playlists(playlists):
-    print "NEW TRACK *************"
-    tracks_list = []
+    playlist_dict = {}
     for playlist_id in playlists:
+        print "***************** NEW PLAYLIST **************"
+        playlist_dict[playlist_id] = []
         for track_id in playlists[playlist_id]:
             print track_id
     return tracks_list
@@ -72,20 +75,66 @@ if __name__ == '__main__':
 
         print "******************************* PROCESSED PLAYLISTS", processed_playlists
         # get audio features
-        playlists_w_audio_features = get_audio_features_for_playlists(processed_playlists)
+
+        # dictionary of playlistIDs to tracks
+        seed_playlists_w_audio_features = get_audio_features_for_playlists(processed_playlists)
+        setUpCentroids(seed_playlists_w_audio_features)
+
+        # introduce a new set of songs
+        # NEW TRACKS DOESN'T EXIST YET
+        introduceNewTracks(new_tracks)
+        for iter_idx in xrange(MAX_ITERS):
+            updateCentroids()
+            #for each song, we assign new centroid, update playlist_for_centroid 
+            new_playlist_for_centroid = [[]*K]
+            for playlist in playlist_for_centroid:
+                for track in playlist:
+                    idx = assignTrackToCentroid(track)
+                    new_playlist_for_centroid[idx].append(track)
+            if centroids_not_changed(new_playlist_for_centroid):
+                break
+            #compare assignment with prev assignment, break if same 
+
+        
+
+
         # run_clustering(processed_playlists)
         # print playlists
         # centroids = assignCentroids(playlists['items'])
     else:
         print "Can't get token for", username
 
+def centroids_not_changed(new_playlist_for_centroid):
+    for idx in xrange(K):
+        if cmp(playlist_for_centroid, new_playlist_for_centroid) != 0:
+            return False
+    return True
+
+
+# TODO when introducing new tracks; make sure they're incorporated in the centroid_dicts
+# ASSUMES THAT NEW_TRACKS IS A LIST DAMMIT
+def introduceNewTracks(new_tracks):
+    new_track_assignments = []
+    for track in new_tracks:
+        idx = assignTrackToCentroid(track)
+        playlist_for_centroid[idx].append(track)
+        #TODO 
 
 
 
+def assignTrackToCentroid(track):
+    min_distance = float("inf")
+    min_idx = -1
+    for centroid in centroids:
+        curr_distance = computeDistance(centroids[centroid], track)
+        if min_distance > curr_distance:
+            min_distance = curr_distance
+            min_idx = centroid
+    return min_idx
 
-
-# playlist: dictionary loaded from json file
-def computeAverageAndVariance(playlist):
+# playlist: a list of tracks (with audio features in them)
+# avg_var_dict: dictionary key: feature name, value: (average, variance)
+def computeCentroid(idx, playlist):
     features = {}
     # print "printing playlist-----------------------"
     # print playlist
@@ -107,55 +156,33 @@ def computeAverageAndVariance(playlist):
     for feature in features:
         avg_var_dict[feature] = (np.mean(features[feature]), np.var(features[feature]))
 
+    corresponding_list_of_tracks_for_centroid[idx] = playlist
     #dictionary: feature key: (avg, var)
     return avg_var_dict
 
-def computeDistance(avg_var_list, variance_importance_dict, track, weights):
+# 
+def computeDistance(avg_var_dict, track):
     sum_so_far = 0
     for feature in track:
         if feature not in audio_features_list:
             continue
-        importance_idx = variance_importance_dict[feature]
-        weight = weights[importance_idx]
-        sum_so_far += weight*(avg_var_dict[feature][0] - track[feature])**2
+        sum_so_far += ((avg_var_dict[feature][0] - track[feature])**2) / (avg_var_dict[feature][1])
     return sum_so_far**0.5
-   
 
 # assumes that playlists is a list of list of tracks
-def assignCentroids(playlists):
-    weights = [.5, .3, .1, .1] 
+def setUpCentroids(playlists_w_audio_features):
+    for idx, playlist_id in enumerate(playlists_w_audio_features):
+        curr_playlist = playlists_w_audio_features[playlist_id]
+        centroid = computeCentroid(idx, curr_playlist)
+        playlist_for_centroid[idx] = curr_playlist
+        centroids[idx] = centroid
 
-    avg_var_dicts = []
+def updateCentroids():
+    new_playlist_for_centroid
+    for idx, playlist in enumerate(playlist_for_centroid):
+        centroid = computeCentroid(idx, playlist)
+        centroids[idx] = centroid
 
-    for playlist in playlists:
-        avg_var_dicts.append(computeAverageAndVariance(playlist))
-
-    distances = []
-    minDist = float('inf')
-    minIdx = -1
-    return avg_var_dicts
-
-def assignTrackToCentroid(track, playlist_centroids):
-    print "---------------------- # OF PLAYLISTS:", len(avg_var_dicts), "-------------------"
-    for i, playlist_centroid in enumerate(playlist_centroids):
-
-        variances = [(feature, playlist_centroid[feature][1]) for feature in playlist_centroid]
-        sorted_list_variances = sorted(variances, key=lambda x: x[1])
-
-        variance_importance_dict = {}
-        for j, (feature, variance) in enumerate(sorted_list_variances):
-            variance_importance_dict[feature] = j
-
-        dist = computeDistance(playlist_centroid, variance_importance_dict, track, weights)
-        distances.append(dist)
-        if minDist > dist:
-            print minIdx, i
-            minIdx = i
-            minDist = dist
-
-
-    print sorted(distances)[0]
-    print minIdx
 
 
 
