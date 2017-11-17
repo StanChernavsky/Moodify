@@ -44,6 +44,14 @@ def process_playlists(username, playlists):
     print "************************************************"
     return all_playlists
 
+# dict from playlist to track IDs
+def get_audio_features_for_playlists(playlists):
+    print "NEW TRACK *************"
+    tracks_list = []
+    for playlist_id in playlists:
+        for track_id in playlists[playlist_id]:
+            print track_id
+    return tracks_list
 
 
 if __name__ == '__main__':
@@ -59,7 +67,12 @@ if __name__ == '__main__':
     if token:
         sp = spotipy.Spotify(auth=token)
         playlists = sp.user_playlists(username)
+        # processed_playlists is a dict from playlist ID to track IDs
         processed_playlists = process_playlists(username, playlists)
+
+        print "******************************* PROCESSED PLAYLISTS", processed_playlists
+        # get audio features
+        playlists_w_audio_features = get_audio_features_for_playlists(processed_playlists)
         # run_clustering(processed_playlists)
         # print playlists
         # centroids = assignCentroids(playlists['items'])
@@ -101,12 +114,14 @@ def computeDistance(avg_var_list, variance_importance_dict, track, weights):
     sum_so_far = 0
     for feature in track:
         if feature not in audio_features_list:
-                continue
+            continue
         importance_idx = variance_importance_dict[feature]
         weight = weights[importance_idx]
         sum_so_far += weight*(avg_var_dict[feature][0] - track[feature])**2
     return sum_so_far**0.5
    
+
+# assumes that playlists is a list of list of tracks
 def assignCentroids(playlists):
     weights = [.5, .3, .1, .1] 
 
