@@ -118,7 +118,7 @@ def kmeans(examples, K, maxIters):
         
     def assignCentroid(coord, centers, idx):
         minDistance = computeDistanceOptimized(coord, centers[0], xSquared[idx], muSquared[0])
-        closestCentroidIdx = 0 #centers[0]
+        closestCentroidIdx = 0
         for i in xrange(K):
             distance = computeDistanceOptimized(coord, centers[i], xSquared[idx], muSquared[i]) #(coord - centers[i])**2
             if distance < minDistance:

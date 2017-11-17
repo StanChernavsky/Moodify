@@ -1,0 +1,33 @@
+[{
+      "id" : "3tW6NhWt9RgFpZxJBWYA3U",
+      "name" : "Say It",
+      "artist": "Flume",
+      "popularity" : 77,
+      "preview_url" : "https://p.scdn.co/mp3-preview/e5e45bd32405178692f8d1f5cf159413dc1a67cc",
+    	"danceability" : 0.599,
+    "energy" : 0.533,
+    "valence" : 0.262,
+    "tempo" : 75.373
+    },
+    {
+      "id" : "1D066zixBwqFYqBhKgdPzp",
+      "name" : "Fergalicious",
+      "artist": "Fergie",
+      "popularity" : 66,
+      "preview_url" : "https://p.scdn.co/mp3-preview/5d742169f69149e20909a454b3999f3a9428408d",
+    	"danceability" : 0.904,
+    "energy" : 0.598,
+     "valence" : 0.791,
+    "tempo" : 129.055
+    },
+    {
+      "id" : "6OZh916QF8XNunWaP97WEZ",
+      "name" : "Fast Car - Radio Edit",
+      "artist": "Jonas Blue",
+      "popularity" : 94,
+      "preview_url" : "https://p.scdn.co/mp3-preview/750c4e854bbb8d1e11e7eea04047f6a9e9a0730f",
+      "danceability" : 0.459,
+    "energy" : 0.587,
+    "valence" : 0.564,
+    "tempo" : 113.901
+    }]

@@ -1,0 +1,11 @@
+{
+      "id" : "0SJPThTy7ynySPF4euczx7",
+      "name" : "Work from Home",
+      "artist": "Fifth Harmony",
+      "popularity" : 100,
+      "preview_url" : "https://p.scdn.co/mp3-preview/351a86db5a906274e7b09dbfec8170e159f8e665",
+       "danceability" : 0.803,
+	    "energy" : 0.631,
+	    "valence" : 0.659,
+	    "tempo" : 104.999
+    }
