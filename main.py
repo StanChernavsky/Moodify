@@ -13,16 +13,19 @@ import spotipy.util as util
 
 # track = json.load(open('track.json'))
 audio_features_list = ['danceability', 'valence', 'energy', 'tempo', 'loudness', 'acousticness', 'speechiness', 'liveness']
-MAX_ITERS = 1000
+MAX_ITERS = 300
 K = 3
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
+tracks_dict = {}
 
 def getTrackIds(tracks):
     track_ids = []
     for i, item in enumerate(tracks['items']):
         track = item['track']
+        # print track
         track_ids.append(track['id'])
+        tracks_dict[track['id']] = (track['name'], track['artists'][0]['name'])
     return track_ids
 
 # returns a dict of playlist ID to a list of track IDs
@@ -199,7 +202,12 @@ if __name__ == '__main__':
 
         print "******************* final result ******************* after", iter_idx, "iterations"
         for i, p in enumerate(playlist_for_centroid):
-            print p
+            print "******************* CENTROID", i, "****************************"
+            for track in p:
+                if type(track) != dict:
+                    continue
+                if track['id'] in tracks_dict:
+                    print tracks_dict[track['id']]
             print "********* average, variance dictionary *********"
             print computeCentroid(i, p)
             print "******************************************************************"
