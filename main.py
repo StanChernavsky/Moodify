@@ -66,7 +66,7 @@ def get_audio_features_for_playlists(sp, playlists):
 
         for track_id in playlists[playlist_id]:
             # print track_id
-            if track_id is None or if type(track_id) == list:
+            if track_id is None or type(track_id) == list:
                 continue
            #  playlist_dict['id'] = track_id
             audio_features = sp.audio_features(tracks=[track_id])
@@ -211,7 +211,9 @@ if __name__ == '__main__':
                 break
             #compare assignment with prev assignment, break if same 
 
-        
+        print "******************* final result ******************* after", iter_idx, "iterations"
+        print playlist_for_centroid
+
 
 
         # run_clustering(processed_playlists)
