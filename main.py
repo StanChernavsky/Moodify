@@ -13,7 +13,7 @@ import spotipy.util as util
 
 # track = json.load(open('track.json'))
 audio_features_list = ['danceability', 'valence', 'energy', 'tempo', 'loudness', 'acousticness', 'speechiness', 'liveness']
-MAX_ITERS = 300
+MAX_ITERS = 10000
 K = 3
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
@@ -209,6 +209,7 @@ if __name__ == '__main__':
                     new_playlist_for_centroid[idx].append(track)
             if centroids_not_changed(new_playlist_for_centroid):
                 break
+            playlist_for_centroid = new_playlist_for_centroid
             #compare assignment with prev assignment, break if same 
 
         print "******************* final result ******************* after", iter_idx, "iterations"
