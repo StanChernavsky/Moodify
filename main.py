@@ -66,7 +66,7 @@ def get_audio_features_for_playlists(sp, playlists):
 
         for track_id in playlists[playlist_id]:
             # print track_id
-            if track_id is None:
+            if track_id is None or if type(track_id) == list:
                 continue
            #  playlist_dict['id'] = track_id
             audio_features = sp.audio_features(tracks=[track_id])
