@@ -12,9 +12,9 @@ import spotipy.util as util
 # playlists.append(json.load(open('seed3.json')))
 
 # track = json.load(open('track.json'))
-audio_features_list = ['danceability', 'valence', 'energy', 'tempo']
+audio_features_list = ['danceability', 'valence', 'energy', 'tempo', 'loudness', 'acousticness', 'speechiness', 'liveness']
 MAX_ITERS = 100
-K = 4
+K = 3
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
 
@@ -59,26 +59,28 @@ def process_playlists(sp, username, playlists):
 def get_audio_features_for_playlists(sp, playlists):
     playlist_dict = {}
     for playlist_id in playlists:
-        print "***************** NEW PLAYLIST ******************"
+        print playlists[playlist_id]
 
         # get all tracks from playlist
         tracks_in_playlist = []
 
         for track_id in playlists[playlist_id]:
+            # print track_id
             if track_id is None:
                 continue
            #  playlist_dict['id'] = track_id
             audio_features = sp.audio_features(tracks=[track_id])
+            # print audio_features[0]
             tracks_in_playlist.append(audio_features[0])
             # print track_id
-        playlists[playlist_id] = tracks_in_playlist
+        playlist_dict[playlist_id] = tracks_in_playlist
     return playlist_dict
 
 # assumes that playlists is a list of list of tracks
 def setUpCentroids(playlists_w_audio_features):
-    print "IN SET UP CENTROIDS", playlists_w_audio_features
     for idx, playlist_id in enumerate(playlists_w_audio_features):
-        curr_playlist = playlists_w_audio_features[playlist_id]['tracks']
+        curr_playlist = playlists_w_audio_features[playlist_id]
+        # print "IN SET UP CENTROIDS", curr_playlist
         centroid = computeCentroid(idx, curr_playlist)
         playlist_for_centroid[idx] = curr_playlist
         centroids[idx] = centroid
@@ -98,13 +100,12 @@ def assignTrackToCentroid(track):
 # playlist: a list of tracks (with audio features in them)
 # avg_var_dict: dictionary key: feature name, value: (average, variance)
 def computeCentroid(idx, playlist):
-    print "PRINTING PLAYLIST IN COMPUTE CENTROID", playlist
     features = {}
     # print "printing playlist-----------------------"
     # print playlist
     
     for track in playlist:
-        print "PRINTING TRACK-------------", track
+        # print "PRINTING TRACK-------------", track
         # print track['name']
         for feature in track: # each track is made up of only features
 
@@ -121,13 +122,13 @@ def computeCentroid(idx, playlist):
     for feature in features:
         avg_var_dict[feature] = (np.mean(features[feature]), np.var(features[feature]))
 
-    print "PRINTING PLAYLIST", playlist, idx
     playlist_for_centroid[idx] = playlist
     #dictionary: feature key: (avg, var)
     return avg_var_dict
 
 # 
 def computeDistance(avg_var_dict, track):
+    print avg_var_dict, "********", track
     sum_so_far = 0
     for feature in track:
         if feature not in audio_features_list:
@@ -141,6 +142,8 @@ def updateCentroids():
     new_playlist_for_centroid = [[] for i in range(K)]
     for idx, playlist in enumerate(playlist_for_centroid):
         centroid = computeCentroid(idx, playlist)
+        if len(centroid) == 0:
+            print "CENTROID IS EMPTY! AVG VAR DICT IS EMPTY!", idx, playlist
         centroids[idx] = centroid
 
 
@@ -155,10 +158,10 @@ def centroids_not_changed(new_playlist_for_centroid):
 # TODO when introducing new tracks; make sure they're incorporated in the centroid_dicts
 # ASSUMES THAT NEW_TRACKS IS A LIST DAMMIT
 def introduceNewTracks(new_tracks):
-    print "PRINGINT PLAYLIST FOR CENTROID", playlist_for_centroid
+    #print "PRINGINT PLAYLIST FOR CENTROID", playlist_for_centroid
     for track in new_tracks:
         idx = assignTrackToCentroid(track)
-        print "PRINTING IDX", idx
+        # print "PRINTING IDX", idx
         playlist_for_centroid[idx].append(track)
         #TODO 
 
@@ -184,12 +187,13 @@ if __name__ == '__main__':
         # processed_playlists is a dict from playlist ID to track IDs
         (new_tracks, processed_playlists) = process_playlists(sp, username, playlists)
 
-        print "******************************* PROCESSED PLAYLISTS", processed_playlists
+        print "******************************* PROCESSED PLAYLISTS", processed_playlists # playlist id to tracks
         # get audio features
 
         # dictionary of playlistIDs to tracks
 
         seed_playlists_w_audio_features = get_audio_features_for_playlists(sp, processed_playlists)
+        # print "PRINTING SEED PLAYLIST", seed_playlists_w_audio_features
         setUpCentroids(seed_playlists_w_audio_features)
 
         # introduce a new set of songs
