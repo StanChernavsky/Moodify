@@ -13,7 +13,7 @@ import spotipy.util as util
 
 # track = json.load(open('track.json'))
 audio_features_list = ['danceability', 'valence', 'energy', 'tempo', 'loudness', 'acousticness', 'speechiness', 'liveness']
-MAX_ITERS = 100
+MAX_ITERS = 500
 K = 3
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
@@ -59,7 +59,7 @@ def process_playlists(sp, username, playlists):
 def get_audio_features_for_playlists(sp, playlists):
     playlist_dict = {}
     for playlist_id in playlists:
-        print playlists[playlist_id]
+        # print playlists[playlist_id]
 
         # get all tracks from playlist
         tracks_in_playlist = []
@@ -128,7 +128,7 @@ def computeCentroid(idx, playlist):
 
 # 
 def computeDistance(avg_var_dict, track):
-    print avg_var_dict, "********", track
+    # print avg_var_dict, "********", track
     sum_so_far = 0
     for feature in track:
         if feature not in audio_features_list:
