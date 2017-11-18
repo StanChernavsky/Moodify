@@ -13,7 +13,7 @@ import spotipy.util as util
 
 # track = json.load(open('track.json'))
 audio_features_list = ['danceability', 'valence', 'energy', 'tempo', 'loudness', 'acousticness', 'speechiness', 'liveness']
-MAX_ITERS = 500
+MAX_ITERS = 1000
 K = 3
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
@@ -65,14 +65,10 @@ def get_audio_features_for_playlists(sp, playlists):
         tracks_in_playlist = []
 
         for track_id in playlists[playlist_id]:
-            # print track_id
             if track_id is None or type(track_id) == list:
                 continue
-           #  playlist_dict['id'] = track_id
             audio_features = sp.audio_features(tracks=[track_id])
-            # print audio_features[0]
             tracks_in_playlist.append(audio_features[0])
-            # print track_id
         playlist_dict[playlist_id] = tracks_in_playlist
     return playlist_dict
 
@@ -80,7 +76,6 @@ def get_audio_features_for_playlists(sp, playlists):
 def setUpCentroids(playlists_w_audio_features):
     for idx, playlist_id in enumerate(playlists_w_audio_features):
         curr_playlist = playlists_w_audio_features[playlist_id]
-        # print "IN SET UP CENTROIDS", curr_playlist
         centroid = computeCentroid(idx, curr_playlist)
         playlist_for_centroid[idx] = curr_playlist
         centroids[idx] = centroid
@@ -101,14 +96,9 @@ def assignTrackToCentroid(track):
 # avg_var_dict: dictionary key: feature name, value: (average, variance)
 def computeCentroid(idx, playlist):
     features = {}
-    # print "printing playlist-----------------------"
-    # print playlist
     
     for track in playlist:
-        # print "PRINTING TRACK-------------", track
-        # print track['name']
         for feature in track: # each track is made up of only features
-
             if feature not in audio_features_list:
                 continue
             if feature not in features:
@@ -116,8 +106,6 @@ def computeCentroid(idx, playlist):
             features[feature].append(track[feature])
 
     avg_dict = {}
-    variance_dict = {}
-    #print features
     avg_var_dict = {}
     for feature in features:
         avg_var_dict[feature] = (np.mean(features[feature]), np.var(features[feature]))
@@ -126,9 +114,8 @@ def computeCentroid(idx, playlist):
     #dictionary: feature key: (avg, var)
     return avg_var_dict
 
-# 
+
 def computeDistance(avg_var_dict, track):
-    # print avg_var_dict, "********", track
     sum_so_far = 0
     for feature in track:
         if feature not in audio_features_list:
@@ -150,6 +137,7 @@ def updateCentroids():
 
 def centroids_not_changed(new_playlist_for_centroid):
     for idx in xrange(K):
+        print playlist_for_centroid, new_playlist_for_centroid
         if cmp(playlist_for_centroid, new_playlist_for_centroid) != 0:
             return False
     return True
@@ -158,10 +146,8 @@ def centroids_not_changed(new_playlist_for_centroid):
 # TODO when introducing new tracks; make sure they're incorporated in the centroid_dicts
 # ASSUMES THAT NEW_TRACKS IS A LIST DAMMIT
 def introduceNewTracks(new_tracks):
-    #print "PRINGINT PLAYLIST FOR CENTROID", playlist_for_centroid
     for track in new_tracks:
         idx = assignTrackToCentroid(track)
-        # print "PRINTING IDX", idx
         playlist_for_centroid[idx].append(track)
         #TODO 
 
@@ -212,13 +198,11 @@ if __name__ == '__main__':
             #compare assignment with prev assignment, break if same 
 
         print "******************* final result ******************* after", iter_idx, "iterations"
-        print playlist_for_centroid
-
-
-
-        # run_clustering(processed_playlists)
-        # print playlists
-        # centroids = assignCentroids(playlists['items'])
+        for i, p in enumerate(playlist_for_centroid):
+            print p
+            print "********* average, variance dictionary *********"
+            print computeCentroid(i, p)
+            print "******************************************************************"
     else:
         print "Can't get token for", username
 
