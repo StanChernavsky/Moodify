@@ -167,16 +167,15 @@ def introduceNewTracks(new_tracks):
 
 
 #idx index of the centroid that has to be randomized
-def get_random_centroid():
+def create_random_centroid(playlists):
+    playlist_index = random.randint(0, len(playlists))
+    song_index = random.randint(0, len(playlists[playlist_index]))
+    song = playlists[playlist_index][song_index]
     centroid = {}
     for feature in audio_features_list:
-        playlist_index = random.randint(0, len(playlists))
-        song_index = random.randint(0, len(playlists[playlist_index]))
-        centroid[feature] = (playlists[playlist_index][song_index][feature], 0)
+        centroid[feature] = (song[feature], 0)
 
-    return centroid
-
-
+    return centroid, song, playlist_index, song_index
 
 
 if __name__ == '__main__':
@@ -220,7 +219,9 @@ if __name__ == '__main__':
 
             missing_centroids_num = K - len(new_playlist_for_centroid)
             for idx in xrange(missing_centroids_num):
-                new_playlist_for_centroid[K - 1 - idx] = get_random_centroid(playlists)
+                new_playlist_for_centroid[K - 1 - idx], song, old_playlist_index, old_song_index = create_random_centroid(new_playlist_for_centroid, K - 1 - idx)
+                new_playlist_for_centroid[K - 1 - idx].append(song)
+                del new_playlist_for_centroid[old_playlist_index][old_song_index]
             playlist_for_centroid = new_playlist_for_centroid
             #compare assignment with prev assignment, break if same
 
