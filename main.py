@@ -50,7 +50,7 @@ def process_playlists(sp, username, playlists):
                 continue
             if k_so_far == K: # JUST TO LIMIT IT TO 3 PLAYLISTS FOR NOW
                 break
-            
+
             if playlist['id'] not in all_playlists:
                 all_playlists[playlist['id']] = []
             print
@@ -110,7 +110,7 @@ def assignTrackToCentroid(track):
 # avg_var_dict: dictionary key: feature name, value: (average, variance)
 def computeCentroid(idx, playlist):
     features = {}
-    
+
     for track in playlist:
         for feature in track: # each track is made up of only features
             if feature not in audio_features_list:
@@ -163,10 +163,18 @@ def introduceNewTracks(new_tracks):
     for track in new_tracks:
         idx = assignTrackToCentroid(track)
         playlist_for_centroid[idx].append(track)
-        #TODO 
+        #TODO
 
 
+#idx index of the centroid that has to be randomized
+def get_random_centroid():
+    centroid = {}
+    for feature in audio_features_list:
+        playlist_index = random.randint(0, len(playlists))
+        song_index = random.randint(0, len(playlists[playlist_index]))
+        centroid[feature] = (playlists[playlist_index][song_index][feature], 0)
 
+    return centroid
 
 
 
@@ -201,7 +209,7 @@ if __name__ == '__main__':
         introduceNewTracks(new_tracks)
         for iter_idx in xrange(MAX_ITERS):
             updateCentroids()
-            #for each song, we assign new centroid, update playlist_for_centroid 
+            #for each song, we assign new centroid, update playlist_for_centroid
             new_playlist_for_centroid = [[] for i in range(K)]
             for playlist in playlist_for_centroid:
                 for track in playlist:
@@ -209,8 +217,12 @@ if __name__ == '__main__':
                     new_playlist_for_centroid[idx].append(track)
             if centroids_not_changed(new_playlist_for_centroid):
                 break
+            
+            missing_centroids_num = K - len(new_playlist_for_centroid)
+            for idx in xrange(missing_centroids_num):
+                new_playlist_for_centroid[K - 1 - idx] = get_random_centroid(playlists)
             playlist_for_centroid = new_playlist_for_centroid
-            #compare assignment with prev assignment, break if same 
+            #compare assignment with prev assignment, break if same
 
         print "******************* final result ******************* after", iter_idx, "iterations"
         for i, p in enumerate(playlist_for_centroid):
@@ -225,8 +237,3 @@ if __name__ == '__main__':
             print "******************************************************************"
     else:
         print "Can't get token for", username
-
-
-
-
-
