@@ -216,7 +216,7 @@ if __name__ == '__main__':
                     new_playlist_for_centroid[idx].append(track)
             if centroids_not_changed(new_playlist_for_centroid):
                 break
-
+            
             missing_centroids_num = K - len(new_playlist_for_centroid)
             for idx in xrange(missing_centroids_num):
                 new_playlist_for_centroid[K - 1 - idx], song, old_playlist_index, old_song_index = create_random_centroid(new_playlist_for_centroid, K - 1 - idx)
