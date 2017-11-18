@@ -31,16 +31,26 @@ def getTrackIds(tracks):
 # returns a dict of playlist ID to a list of track IDs
 def process_playlists(sp, username, playlists):
     all_playlists = {}
+    new_tracks_assigned = False
+    new_tracks = {}
+    k_so_far = 0
     i = 0
-    new_tracks = None
     for playlist in playlists['items']:
-        if i == 0:
-            new_tracks = playlist
-            i += 1
-            continue
-        if i >= 5: # JUST TO LIMIT IT TO 3 PLAYLISTS FOR NOW
-            break
         if playlist['owner']['id'] == username:
+            if i == 0:
+                if playlist['id'] not in new_tracks:
+                    new_tracks[playlist['id']] = []
+                results = sp.user_playlist(username, playlist['id'], fields="tracks,next")
+                tracks = results['tracks']
+                new_tracks[playlist['id']] = getTrackIds(tracks)
+                while tracks['next']:
+                    tracks = sp.next(tracks)
+                    new_tracks[playlist['id']].append(getTrackIds(tracks))
+                i += 1
+                continue
+            if k_so_far == K: # JUST TO LIMIT IT TO 3 PLAYLISTS FOR NOW
+                break
+            
             if playlist['id'] not in all_playlists:
                 all_playlists[playlist['id']] = []
             print
@@ -53,7 +63,8 @@ def process_playlists(sp, username, playlists):
             while tracks['next']:
                 tracks = sp.next(tracks)
                 all_playlists[playlist['id']].append(getTrackIds(tracks))
-        i += 1
+            k_so_far += 1
+            i += 1
     print "************************************************"
     return (new_tracks, all_playlists)
 
