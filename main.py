@@ -14,7 +14,7 @@ import spotipy.util as util
 # track = json.load(open('track.json'))
 audio_features_list = ['danceability', 'valence', 'energy', 'tempo', 'loudness', 'acousticness', 'speechiness', 'liveness']
 MAX_ITERS = 10000
-K = 3
+K = 4
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
 tracks_dict = {}
@@ -167,15 +167,17 @@ def introduceNewTracks(new_tracks):
 
 
 #idx index of the centroid that has to be randomized
-def create_random_centroid(playlists):
-    playlist_index = random.randint(0, len(playlists))
-    song_index = random.randint(0, len(playlists[playlist_index]))
-    song = playlists[playlist_index][song_index]
+def get_random_centroid(idx):
     centroid = {}
+    playlist_index = random.randint(0, len())
+    song_index = random.randint(0, len(playlists[playlist_index]))
     for feature in audio_features_list:
-        centroid[feature] = (song[feature], 0)
+        centroid[feature] = (playlists[playlist_index][song_index][feature], 0)
+    playlist_for_centroid[idx].append()
+    del playlists[playlist_index][song_index]
+    return centroid
 
-    return centroid, song, playlist_index, song_index
+
 
 
 if __name__ == '__main__':
@@ -216,13 +218,15 @@ if __name__ == '__main__':
                     new_playlist_for_centroid[idx].append(track)
             if centroids_not_changed(new_playlist_for_centroid):
                 break
+
+            empty_cluster_indices = []
+            for i, new_p in enumerate(new_playlist_for_centroid):
+                if len(new_p) == 0:
+                    empty_cluster_indices += i
             
-            missing_centroids_num = K - len(new_playlist_for_centroid)
-            for idx in xrange(missing_centroids_num):
-                new_playlist_for_centroid[K - 1 - idx], song, old_playlist_index, old_song_index = create_random_centroid(new_playlist_for_centroid, K - 1 - idx)
-                new_playlist_for_centroid[K - 1 - idx].append(song)
-                del new_playlist_for_centroid[old_playlist_index][old_song_index]
             playlist_for_centroid = new_playlist_for_centroid
+            for idx in empty_cluster_indices:
+                new_playlist_for_centroid[idx] = get_random_centroid(idx)
             #compare assignment with prev assignment, break if same
 
         print "******************* final result ******************* after", iter_idx, "iterations"
