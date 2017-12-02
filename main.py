@@ -4,6 +4,7 @@ from pprint import pprint
 import sys
 import client as client
 import spotipy.util as util
+import random
 
 # for testing without oauth
 # playlists = []
@@ -169,7 +170,7 @@ def introduceNewTracks(new_tracks):
 #idx index of the centroid that has to be randomized
 def get_random_centroid(idx):
     centroid = {}
-    playlist_index = random.randint(0, len())
+    playlist_index = random.randint(0, len(playlists))
     song_index = random.randint(0, len(playlists[playlist_index]))
     for feature in audio_features_list:
         centroid[feature] = (playlists[playlist_index][song_index][feature], 0)
@@ -222,8 +223,8 @@ if __name__ == '__main__':
             empty_cluster_indices = []
             for i, new_p in enumerate(new_playlist_for_centroid):
                 if len(new_p) == 0:
-                    empty_cluster_indices += i
-            
+                    empty_cluster_indices.append(i)
+
             playlist_for_centroid = new_playlist_for_centroid
             for idx in empty_cluster_indices:
                 new_playlist_for_centroid[idx] = get_random_centroid(idx)
