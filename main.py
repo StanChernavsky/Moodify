@@ -7,7 +7,7 @@ import spotipy.util as util
 import random
 
 
-audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade']
+audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit']
 MAX_ITERS = 1000
 K = 4
 centroids = {}
@@ -66,14 +66,18 @@ def process_playlists(sp, username, playlists):
     print "************************************************"
     return (new_tracks, all_playlists)
 
-def get_release_decade(sp, track_id):
+def get_additional_features(sp, track_id):
     track = sp.track(track_id)
     album_id = track["album"]["id"]
     album = sp.album(album_id)
     if album["release_date"] == None:
         print "NO RELEASE DATE"
     print album["release_date"][:3] + "0"
-    return 2020 - int(album["release_date"][:3] + "0")
+    explicit_score = 1 if track["explicit"] == True else 0
+    if explicit_score == 1:
+        print track["name"]
+    return 2020 - int(album["release_date"][:3] + "0"), explicit_score
+
 # dict from playlist to track IDs
 # return: dict from playlist id to a list of track audio features
 # TODO: change to "features" than "audio features"
@@ -89,7 +93,7 @@ def get_audio_features_for_playlists(sp, playlists):
             if track_id is None or type(track_id) == list:
                 continue
             audio_features = sp.audio_features(tracks=[track_id]) #dictionary of feature name and value
-            audio_features[0]['release_decade'] = get_release_decade(sp, track_id)
+            audio_features[0]['release_decade'], audio_features[0]['explicit'] = get_additional_features(sp, track_id)
             # print "***********AUDIO FEATURES************"
             # print audio_features
             tracks_in_playlist.append(audio_features[0])
