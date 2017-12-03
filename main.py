@@ -7,7 +7,7 @@ import spotipy.util as util
 import random
 
 
-audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
+audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade']
 MAX_ITERS = 1000
 K = 4
 centroids = {}
@@ -42,6 +42,7 @@ def process_playlists(sp, username, playlists):
                     new_tracks[playlist['id']] = []
                 results = sp.user_playlist(username, playlist['id'], fields="tracks,next")
                 tracks = results['tracks']
+                print "\n"
                 new_tracks[playlist['id']] = getTrackIds(tracks)
                 while tracks['next']:
                     tracks = sp.next(tracks)
@@ -65,8 +66,17 @@ def process_playlists(sp, username, playlists):
     print "************************************************"
     return (new_tracks, all_playlists)
 
+def get_release_decade(sp, track_id):
+    track = sp.track(track_id)
+    album_id = track["album"]["id"]
+    album = sp.album(album_id)
+    if album["release_date"] == None:
+        print "NO RELEASE DATE"
+    print album["release_date"][:3] + "0"
+    return 2020 - int(album["release_date"][:3] + "0")
 # dict from playlist to track IDs
 # return: dict from playlist id to a list of track audio features
+# TODO: change to "features" than "audio features"
 def get_audio_features_for_playlists(sp, playlists):
     playlist_dict = {}
     for playlist_id in playlists:
@@ -78,8 +88,14 @@ def get_audio_features_for_playlists(sp, playlists):
         for track_id in playlists[playlist_id]:
             if track_id is None or type(track_id) == list:
                 continue
-            audio_features = sp.audio_features(tracks=[track_id])
+            audio_features = sp.audio_features(tracks=[track_id]) #dictionary of feature name and value
+            audio_features[0]['release_decade'] = get_release_decade(sp, track_id)
+            # print "***********AUDIO FEATURES************"
+            # print audio_features
             tracks_in_playlist.append(audio_features[0])
+
+        # print "***********TRACKS IN PLAYLIST************"
+        # print tracks_in_playlist
         playlist_dict[playlist_id] = tracks_in_playlist
     # print "PRINTING PLAYLIST DICT *********************", playlist_dict
     return playlist_dict
@@ -90,7 +106,7 @@ def setUpCentroids(playlists_w_audio_features):
         curr_playlist = playlists_w_audio_features[playlist_id]
         centroid = computeCentroid(idx, curr_playlist)
         playlist_for_centroid[idx] = curr_playlist
-        
+
         centroids[idx] = centroid
 
 def assignTrackToCentroid(track):
@@ -250,7 +266,7 @@ if __name__ == '__main__':
             # print "CENTROIDS", centroids
 
             playlist_for_centroid = new_playlist_for_centroid
-            
+
             for idx in empty_cluster_indices:
                 centroids[idx] = get_random_centroid(idx)
 
