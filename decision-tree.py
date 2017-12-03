@@ -17,6 +17,7 @@ playlist_for_centroid = [[] for i in range(K)]
 tracks_dict = {}
 
 playlist_titles = ["Danceable", "Classical", "XXX", "Country", "Clusterfuck"]
+playlist_id_to_name = {}
 
 def getTrackIds(tracks):
     track_ids = []
@@ -38,6 +39,7 @@ def process_playlists(sp, username, playlists):
                 continue
             else:
                 print "added", playlist['name']
+            playlist_id_to_name[playlist['id']] = playlist['name']
             if playlist['name'] == "Clusterfuck":
                 if playlist['id'] not in new_tracks:
                     new_tracks[playlist['id']] = []
@@ -80,6 +82,7 @@ def get_audio_features_for_playlists(sp, playlists):
             if track_id is None or type(track_id) == list:
                 continue
             audio_features = sp.audio_features(tracks=[track_id])
+            audio_features[0]['original_playlist_id'] = playlist_id
             tracks_in_playlist.append(audio_features[0])
         playlist_dict[playlist_id] = tracks_in_playlist
     # print "PRINTING PLAYLIST DICT *********************", playlist_dict
@@ -225,15 +228,33 @@ if __name__ == '__main__':
 
         #dict from playlist id to a list of track audio features
         seed_playlists_w_audio_features = get_audio_features_for_playlists(sp, processed_playlists)
-        df_train = pd.DataFrame.from_dict(seed_playlists_w_audio_features)
+        print seed_playlists_w_audio_features
+
+        df_train = pd.DataFrame()
+
+        for playlist_key in seed_playlists_w_audio_features:
+            for track_idx, track_elem in enumerate(seed_playlists_w_audio_features[playlist_key]):
+                #track_row = pd.DataFrame.from_dict(seed_playlists_w_audio_features[playlist_key][track_idx], index = [i])
+                track_row = pd.Series(seed_playlists_w_audio_features[playlist_key][track_idx])
+                # track_row = track_row.assign(original_playlist=pd.Series(playlist_key).values)
+                df_train = df_train.append(track_row, ignore_index=True)
+
+        
         print "DF TRAIN ********"
         print df_train
+
+        df_test_with_audio_features = get_audio_features_for_playlists(sp, new_tracks)
+        df_test = pd.DataFrame()
+        for playlist_key in df_test_with_audio_features:
+            for track_idx, track_elem in enumerate(df_test_with_audio_features[playlist_key]):
+                track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
+                df_test = df_test.append(track_row, ignore_index=True)
         # print "PRINTING SEED PLAYLIST", seed_playlists_w_audio_features
 
 
 
-        f = open('songs.csv','rU')
-        songs = pd.read_csv(f)
+        # f = open('songs.csv','rU')
+        # songs = pd.read_csv(f)
 
         # songsTrain and songsTest
 
@@ -244,11 +265,12 @@ if __name__ == '__main__':
         features = audio_features_list
         split = 10
         dt = DecisionTreeClassifier(min_samples_split=split) # parameter is optional
-        dt.fit(songsTrain[features],songsTrain['category']) #category is playlist ID
-        predictions = dt.predict(songsTest[features])
+        dt.fit(df_train[features],df_train['original_playlist_id']) #category is playlist ID
+        predictions = dt.predict(df_test[features])
 
         print "******************* final result *******************"
-        print predictions
+        for prediction in predictions:
+            print playlist_id_to_name[prediction]
         # Calculate accuracy
         # numtrain = len(songsTrain)
         # numtest = len(songsTest)
