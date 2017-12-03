@@ -9,7 +9,8 @@ import random
 from sklearn.tree import DecisionTreeClassifier
 
 
-audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
+#audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
+audio_features_list = [u'danceability', u'energy', u'speechiness']
 MAX_ITERS = 1000
 K = 4
 centroids = {}
@@ -49,6 +50,7 @@ def process_playlists(sp, username, playlists):
                 while tracks['next']:
                     tracks = sp.next(tracks)
                     new_tracks[playlist['id']].append(getTrackIds(tracks))
+                continue
             if k_so_far == K: # JUST TO LIMIT IT TO 3 PLAYLISTS FOR NOW
                 break
 
@@ -269,8 +271,22 @@ if __name__ == '__main__':
         predictions = dt.predict(df_test[features])
 
         print "******************* final result *******************"
+        # for test_row in df_test:
+        #     print test_row
+            #print tracks_dict[test_row['id']]
+        playlist_titles = []
         for prediction in predictions:
-            print playlist_id_to_name[prediction]
+            playlist_titles.append(playlist_id_to_name[prediction])
+        df_predictions = pd.DataFrame({'prediction': playlist_titles})
+        df_test_with_predictions = pd.concat([df_test, df_predictions], axis = 1)
+
+
+
+        for index, row in df_test_with_predictions.iterrows():
+            print tracks_dict[row['id']], row['prediction']
+
+
+
         # Calculate accuracy
         # numtrain = len(songsTrain)
         # numtest = len(songsTest)
