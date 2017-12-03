@@ -1,10 +1,12 @@
 import json
 import numpy as np
+import pandas as pd
 from pprint import pprint
 import sys
 import client as client
 import spotipy.util as util
 import random
+from sklearn.tree import DecisionTreeClassifier
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
@@ -213,6 +215,7 @@ if __name__ == '__main__':
         sp = client.Spotify(auth=token)
         playlists = sp.user_playlists(username)
         # processed_playlists is a dict from playlist ID to track IDs
+        # new tracks should be songsTest
         (new_tracks, processed_playlists) = process_playlists(sp, username, playlists)
 
         # print "******************************* PROCESSED PLAYLISTS", processed_playlists # playlist id to tracks
@@ -220,52 +223,41 @@ if __name__ == '__main__':
 
         # dictionary of playlistIDs to tracks
 
+        #dict from playlist id to a list of track audio features
         seed_playlists_w_audio_features = get_audio_features_for_playlists(sp, processed_playlists)
+        df_train = pd.DataFrame.from_dict(seed_playlists_w_audio_features)
+        print "DF TRAIN ********"
+        print df_train
         # print "PRINTING SEED PLAYLIST", seed_playlists_w_audio_features
-        setUpCentroids(seed_playlists_w_audio_features)
-
-        # introduce a new set of songs
-        # NEW TRACKS DOESN'T EXIST YET
-        introduceNewTracks(new_tracks)
-        for iter_idx in xrange(MAX_ITERS):
-            print "******************centroids", centroids
-            updateCentroids()
-            #for each song, we assign new centroid, update playlist_for_centroid
-            new_playlist_for_centroid = [[] for i in range(K)]
-            for playlist in playlist_for_centroid:
-                for track in playlist:
-                    idx = assignTrackToCentroid(track)
-                    new_playlist_for_centroid[idx].append(track)
-            if centroids_not_changed(new_playlist_for_centroid):
-                break
-
-            empty_cluster_indices = []
-            #print "NEW PLAYLIST FOR CENTROID", new_playlist_for_centroid
-            for i, new_p in enumerate(new_playlist_for_centroid):
-                if len(new_p) == 0:
-                    empty_cluster_indices.append(i)
-
-            # print "THESE ARE THE EMPTY CLUSTER INDICES:", empty_cluster_indices
-            # print "CENTROIDS", centroids
-
-            playlist_for_centroid = new_playlist_for_centroid
-            
-            for idx in empty_cluster_indices:
-                centroids[idx] = get_random_centroid(idx)
 
 
-            #compare assignment with prev assignment, break if same
 
-        print "******************* final result ******************* after", iter_idx, "iterations"
-        for i, p in enumerate(playlist_for_centroid):
-            print "******************* CENTROID", i, "****************************"
-            for track in p:
-                if type(track) != dict:
-                    continue
-                if track['id'] in tracks_dict:
-                    print tracks_dict[track['id']]
-            print "********* average, variance dictionary *********"
-            print computeCentroid(i, p)
-            print "******************************************************************"
+        f = open('songs.csv','rU')
+        songs = pd.read_csv(f)
+
+        # songsTrain and songsTest
+
+        # Predict temperature category from other features
+
+        # citiesTrain: all songs
+        # citiesTest: new playlist
+        features = audio_features_list
+        split = 10
+        dt = DecisionTreeClassifier(min_samples_split=split) # parameter is optional
+        dt.fit(songsTrain[features],songsTrain['category']) #category is playlist ID
+        predictions = dt.predict(songsTest[features])
+
+        print "******************* final result *******************"
+        print predictions
+        # Calculate accuracy
+        # numtrain = len(songsTrain)
+        # numtest = len(songsTest)
+        # correct = 0
+        # for i in range(numtest):
+        #     print 'Predicted:', predictions[i], ' Actual:', citiesTest.loc[numtrain+i]['category']
+        #     if predictions[i] == citiesTest.loc[numtrain+i]['category']: correct +=1
+        # print 'Accuracy:', float(correct)/float(numtest)
+        
+
     else:
         print "Can't get token for", username
