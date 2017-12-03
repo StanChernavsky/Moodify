@@ -1,13 +1,15 @@
 import json
 import numpy as np
+import pandas as pd
 from pprint import pprint
 import sys
 import client as client
 import spotipy.util as util
 import random
+from sklearn.tree import DecisionTreeClassifier
 
 
-audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit']
+audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
 MAX_ITERS = 1000
 K = 4
 centroids = {}
@@ -15,6 +17,7 @@ playlist_for_centroid = [[] for i in range(K)]
 tracks_dict = {}
 
 playlist_titles = ["Danceable", "Classical", "XXX", "Country", "Clusterfuck"]
+playlist_id_to_name = {}
 
 def getTrackIds(tracks):
     track_ids = []
@@ -36,12 +39,12 @@ def process_playlists(sp, username, playlists):
                 continue
             else:
                 print "added", playlist['name']
+            playlist_id_to_name[playlist['id']] = playlist['name']
             if playlist['name'] == "Clusterfuck":
                 if playlist['id'] not in new_tracks:
                     new_tracks[playlist['id']] = []
                 results = sp.user_playlist(username, playlist['id'], fields="tracks,next")
                 tracks = results['tracks']
-                print "\n"
                 new_tracks[playlist['id']] = getTrackIds(tracks)
                 while tracks['next']:
                     tracks = sp.next(tracks)
@@ -65,21 +68,8 @@ def process_playlists(sp, username, playlists):
     print "************************************************"
     return (new_tracks, all_playlists)
 
-def get_additional_features(sp, track_id):
-    track = sp.track(track_id)
-    album_id = track["album"]["id"]
-    album = sp.album(album_id)
-    if album["release_date"] == None:
-        print "NO RELEASE DATE"
-    print album["release_date"][:3] + "0"
-    explicit_score = 1 if track["explicit"] == True else 0
-    if explicit_score == 1:
-        print track["name"]
-    return 2020 - int(album["release_date"][:3] + "0"), explicit_score
-
 # dict from playlist to track IDs
 # return: dict from playlist id to a list of track audio features
-# TODO: change to "features" than "audio features"
 def get_audio_features_for_playlists(sp, playlists):
     playlist_dict = {}
     for playlist_id in playlists:
@@ -91,14 +81,9 @@ def get_audio_features_for_playlists(sp, playlists):
         for track_id in playlists[playlist_id]:
             if track_id is None or type(track_id) == list:
                 continue
-            audio_features = sp.audio_features(tracks=[track_id]) #dictionary of feature name and value
-            audio_features[0]['release_decade'], audio_features[0]['explicit'] = get_additional_features(sp, track_id)
-            # print "***********AUDIO FEATURES************"
-            # print audio_features
+            audio_features = sp.audio_features(tracks=[track_id])
+            audio_features[0]['original_playlist_id'] = playlist_id
             tracks_in_playlist.append(audio_features[0])
-
-        # print "***********TRACKS IN PLAYLIST************"
-        # print tracks_in_playlist
         playlist_dict[playlist_id] = tracks_in_playlist
     # print "PRINTING PLAYLIST DICT *********************", playlist_dict
     return playlist_dict
@@ -109,7 +94,7 @@ def setUpCentroids(playlists_w_audio_features):
         curr_playlist = playlists_w_audio_features[playlist_id]
         centroid = computeCentroid(idx, curr_playlist)
         playlist_for_centroid[idx] = curr_playlist
-
+        
         centroids[idx] = centroid
 
 def assignTrackToCentroid(track):
@@ -233,6 +218,7 @@ if __name__ == '__main__':
         sp = client.Spotify(auth=token)
         playlists = sp.user_playlists(username)
         # processed_playlists is a dict from playlist ID to track IDs
+        # new tracks should be songsTest
         (new_tracks, processed_playlists) = process_playlists(sp, username, playlists)
 
         # print "******************************* PROCESSED PLAYLISTS", processed_playlists # playlist id to tracks
@@ -240,52 +226,60 @@ if __name__ == '__main__':
 
         # dictionary of playlistIDs to tracks
 
+        #dict from playlist id to a list of track audio features
         seed_playlists_w_audio_features = get_audio_features_for_playlists(sp, processed_playlists)
+        print seed_playlists_w_audio_features
+
+        df_train = pd.DataFrame()
+
+        for playlist_key in seed_playlists_w_audio_features:
+            for track_idx, track_elem in enumerate(seed_playlists_w_audio_features[playlist_key]):
+                #track_row = pd.DataFrame.from_dict(seed_playlists_w_audio_features[playlist_key][track_idx], index = [i])
+                track_row = pd.Series(seed_playlists_w_audio_features[playlist_key][track_idx])
+                # track_row = track_row.assign(original_playlist=pd.Series(playlist_key).values)
+                df_train = df_train.append(track_row, ignore_index=True)
+
+        
+        print "DF TRAIN ********"
+        print df_train
+
+        df_test_with_audio_features = get_audio_features_for_playlists(sp, new_tracks)
+        df_test = pd.DataFrame()
+        for playlist_key in df_test_with_audio_features:
+            for track_idx, track_elem in enumerate(df_test_with_audio_features[playlist_key]):
+                track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
+                df_test = df_test.append(track_row, ignore_index=True)
         # print "PRINTING SEED PLAYLIST", seed_playlists_w_audio_features
-        setUpCentroids(seed_playlists_w_audio_features)
-
-        # introduce a new set of songs
-        # NEW TRACKS DOESN'T EXIST YET
-        introduceNewTracks(new_tracks)
-        for iter_idx in xrange(MAX_ITERS):
-            print "******************centroids", centroids
-            updateCentroids()
-            #for each song, we assign new centroid, update playlist_for_centroid
-            new_playlist_for_centroid = [[] for i in range(K)]
-            for playlist in playlist_for_centroid:
-                for track in playlist:
-                    idx = assignTrackToCentroid(track)
-                    new_playlist_for_centroid[idx].append(track)
-            if centroids_not_changed(new_playlist_for_centroid):
-                break
-
-            empty_cluster_indices = []
-            #print "NEW PLAYLIST FOR CENTROID", new_playlist_for_centroid
-            for i, new_p in enumerate(new_playlist_for_centroid):
-                if len(new_p) == 0:
-                    empty_cluster_indices.append(i)
-
-            # print "THESE ARE THE EMPTY CLUSTER INDICES:", empty_cluster_indices
-            # print "CENTROIDS", centroids
-
-            playlist_for_centroid = new_playlist_for_centroid
-
-            for idx in empty_cluster_indices:
-                centroids[idx] = get_random_centroid(idx)
 
 
-            #compare assignment with prev assignment, break if same
 
-        print "******************* final result ******************* after", iter_idx, "iterations"
-        for i, p in enumerate(playlist_for_centroid):
-            print "******************* CENTROID", i, "****************************"
-            for track in p:
-                if type(track) != dict:
-                    continue
-                if track['id'] in tracks_dict:
-                    print tracks_dict[track['id']]
-            print "********* average, variance dictionary *********"
-            print computeCentroid(i, p)
-            print "******************************************************************"
+        # f = open('songs.csv','rU')
+        # songs = pd.read_csv(f)
+
+        # songsTrain and songsTest
+
+        # Predict temperature category from other features
+
+        # citiesTrain: all songs
+        # citiesTest: new playlist
+        features = audio_features_list
+        split = 10
+        dt = DecisionTreeClassifier(min_samples_split=split) # parameter is optional
+        dt.fit(df_train[features],df_train['original_playlist_id']) #category is playlist ID
+        predictions = dt.predict(df_test[features])
+
+        print "******************* final result *******************"
+        for prediction in predictions:
+            print playlist_id_to_name[prediction]
+        # Calculate accuracy
+        # numtrain = len(songsTrain)
+        # numtest = len(songsTest)
+        # correct = 0
+        # for i in range(numtest):
+        #     print 'Predicted:', predictions[i], ' Actual:', citiesTest.loc[numtrain+i]['category']
+        #     if predictions[i] == citiesTest.loc[numtrain+i]['category']: correct +=1
+        # print 'Accuracy:', float(correct)/float(numtest)
+        
+
     else:
         print "Can't get token for", username
