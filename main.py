@@ -8,8 +8,8 @@ import random
 import math
 
 
-audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit', 'log_danceability_and_valence']
-feature_weight = {u'danceability': 1, u'valence': 1, u'energy':1 , u'tempo':1, u'loudness':1, u'acousticness':1, u'speechiness':1, u'liveness':1, 'release_decade':0, 'explicit':0, 'log_danceability_and_valence':1}
+audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit']
+feature_weight = {u'danceability': 1, u'valence': 1, u'energy':1 , u'tempo':1, u'loudness':1, u'acousticness':1, u'speechiness':1, u'liveness':1, 'release_decade':0, 'explicit':0}
 MAX_ITERS = 1000
 K = 4
 centroids = {}
@@ -95,7 +95,6 @@ def get_audio_features_for_playlists(sp, playlists):
                 continue
             audio_features = sp.audio_features(tracks=[track_id]) #dictionary of feature name and value
             audio_features[0]['release_decade'], audio_features[0]['explicit'] = get_additional_features(sp, track_id)
-            audio_features[0]['log_danceability_and_valence'] = math.log(float(audio_features[0]['danceability']) / audio_features[0]['valence'], 2)
             # print "***********AUDIO FEATURES************"
             # print audio_features
             tracks_in_playlist.append(audio_features[0])
