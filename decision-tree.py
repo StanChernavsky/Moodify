@@ -6,18 +6,19 @@ import sys
 import client as client
 import spotipy.util as util
 import random
-from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
+import itertools
 
 
-#audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
-audio_features_list = [u'danceability', u'energy', u'speechiness']
+audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
+#audio_features_list = [u'danceability', u'energy', u'speechiness']
 MAX_ITERS = 1000
 K = 4
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
 tracks_dict = {}
 
-playlist_titles = ["Danceable", "Classical", "XXX", "Country", "Clusterfuck"]
+playlist_titles = ["Lit", "Classical", "XXX", "Country", "Clusterfuck"]
 playlist_id_to_name = {}
 
 def getTrackIds(tracks):
@@ -51,8 +52,8 @@ def process_playlists(sp, username, playlists):
                     tracks = sp.next(tracks)
                     new_tracks[playlist['id']].append(getTrackIds(tracks))
                 continue
-            if k_so_far == K: # JUST TO LIMIT IT TO 3 PLAYLISTS FOR NOW
-                break
+            # if k_so_far == K: # JUST TO LIMIT IT TO 3 PLAYLISTS FOR NOW
+            #     break
 
             if playlist['id'] not in all_playlists:
                 all_playlists[playlist['id']] = []
@@ -66,7 +67,7 @@ def process_playlists(sp, username, playlists):
             while tracks['next']:
                 tracks = sp.next(tracks)
                 all_playlists[playlist['id']].append(getTrackIds(tracks))
-            k_so_far += 1
+            # k_so_far += 1
     print "************************************************"
     return (new_tracks, all_playlists)
 
@@ -79,12 +80,29 @@ def get_audio_features_for_playlists(sp, playlists):
 
         # get all tracks from playlist
         tracks_in_playlist = []
-
+        i = 0
         for track_id in playlists[playlist_id]:
             if track_id is None or type(track_id) == list:
                 continue
+
             audio_features = sp.audio_features(tracks=[track_id])
+            if audio_features[0] is None:
+                print "audio features is empty:", playlist_id, playlist_id_to_name[playlist_id], track_id, tracks_dict[track_id]
             audio_features[0]['original_playlist_id'] = playlist_id
+
+            if playlist_id_to_name[playlist_id] == "Clusterfuck":
+                if i < 8:
+                    audio_features[0]['correct_playlist'] = "Classical"
+                elif i < 16:
+                    audio_features[0]['correct_playlist'] = "Country"
+                elif i < 24:
+                    audio_features[0]['correct_playlist'] = "Lit"
+                else:
+                    audio_features[0]['correct_playlist'] = "XXX"
+                i += 1
+
+
+
             tracks_in_playlist.append(audio_features[0])
         playlist_dict[playlist_id] = tracks_in_playlist
     # print "PRINTING PLAYLIST DICT *********************", playlist_dict
@@ -99,76 +117,9 @@ def setUpCentroids(playlists_w_audio_features):
         
         centroids[idx] = centroid
 
-def assignTrackToCentroid(track):
-    min_distance = float("inf")
-    min_idx = -1
-    if len(centroids) == 0:
-        print "centroids length is 0 even though it's not supposed to be!"
-    for centroid in centroids:
-        curr_distance = computeDistance(centroids[centroid], track)
-        if min_distance > curr_distance:
-            min_distance = curr_distance
-            min_idx = centroid
-    return min_idx
 
-# playlist: a list of tracks (with audio features in them)
-# avg_var_dict: dictionary key: feature name, value: (average, variance)
-def computeCentroid(idx, playlist):
-    features = {}
-
-    for track in playlist:
-        for feature in track: # each track is made up of only features
-            if feature not in audio_features_list:
-                continue
-            if feature not in features:
-                features[feature] = []
-            features[feature].append(track[feature])
-
-    avg_dict = {}
-    avg_var_dict = {}
-    for feature in features:
-        avg_var_dict[feature] = (np.mean(features[feature]), np.var(features[feature]))
-
-    playlist_for_centroid[idx] = playlist
-    #dictionary: feature key: (avg, var)
-    return avg_var_dict
-
-
-def computeDistance(avg_var_dict, track):
-    sum_so_far = 0
-    # print "PRINTING OUT AVG_VAR_DICT", avg_var_dict
-    #print "printing out track", track
-    for feature in track:
-       # print "printing out feature", feature
-        if feature not in audio_features_list:
-            continue
-        sum_so_far += ((avg_var_dict[feature][0] - track[feature])**2) / (avg_var_dict[feature][1])
-    return sum_so_far**0.5
-
-
-
-def updateCentroids():
-    new_playlist_for_centroid = [[] for i in range(K)]
-    print "I AM IN UPDATE CENTROIDS AND I SHOULD BE AN L OF L OF DS", playlist_for_centroid
-    for idx, list_of_dicts_playlist in enumerate(playlist_for_centroid):
-
-        print "I AM SUPPOSED TO BE A FUCKING LIST OF DICTIONARIES", list_of_dicts_playlist
-        # playlist should be a list of dictionaries
-        centroid = computeCentroid(idx, list_of_dicts_playlist)
-        if len(centroid) == 0:
-            print "CENTROID IS EMPTY! AVG VAR DICT IS EMPTY!", idx, list_of_dicts_playlist
-        centroids[idx] = centroid
-
-
-
-def centroids_not_changed(new_playlist_for_centroid):
-    for idx in xrange(K):
-        # print playlist_for_centroid, new_playlist_for_centroid
-        if cmp(playlist_for_centroid, new_playlist_for_centroid) != 0:
-            return False
-    return True
-
-
+def findsubsets(S,m):
+    return set(itertools.combinations(S, m))
 # TODO when introducing new tracks; make sure they're incorporated in the centroid_dicts
 # ASSUMES THAT NEW_TRACKS IS A LIST DAMMIT
 def introduceNewTracks(new_tracks):
@@ -178,32 +129,6 @@ def introduceNewTracks(new_tracks):
         idx = assignTrackToCentroid(track)
         playlist_for_centroid[idx].append(track)
         #TODO
-
-
-#idx index of the centroid that has to be randomized
-def get_random_centroid(idx):
-    print "WE ARE INSIDE GET RANDOM CENTROID!"
-    # print "playlist_for_centroid type:", type(playlist_for_centroid), " ||| ", playlist_for_centroid
-   # print ""
-    centroid = {}
-    playlist_index = random.randint(0, len(playlist_for_centroid)-1)
-    while (len(playlist_for_centroid[playlist_index]) < 3):
-        playlist_index = random.randint(0, len(playlist_for_centroid)-1)
-    # print "chosen playlist, I SHOULD BE A LIST OF DICTIONARIES", playlist_for_centroid[playlist_index]
-    # print "****************"
-    # print "printing length of playlists", len(playlists), "playlist index", playlist_index, "length of chosen playlist", playlists[playlist_index]
-    # print "printing chosen playlist", playlists[playlist_index]
-    song_index = random.randint(0, len(playlist_for_centroid[playlist_index])-2)
-    while type(playlist_for_centroid[playlist_index][song_index]) != dict :
-        song_index = random.randint(0, len(playlist_for_centroid[playlist_index])-2)
-    for feature in audio_features_list:
-        # print "******* playlist_index chosen", feature, playlist_for_centroid[playlist_index]
-        # print "******** feature:", feature, playlist_for_centroid[playlist_index][song_index]
-        # print "THIS SHOULD BE TRACK METADATA DICTIONARY", playlist_for_centroid[playlist_index][song_index]
-        centroid[feature] = (playlist_for_centroid[playlist_index][song_index][feature], 0)
-    playlist_for_centroid[idx].append(playlist_for_centroid[playlist_index][song_index])
-    del playlist_for_centroid[playlist_index][song_index]
-    return centroid
 
 
 if __name__ == '__main__':
@@ -264,35 +189,55 @@ if __name__ == '__main__':
 
         # citiesTrain: all songs
         # citiesTest: new playlist
-        features = audio_features_list
-        split = 10
-        dt = DecisionTreeClassifier(min_samples_split=split) # parameter is optional
-        dt.fit(df_train[features],df_train['original_playlist_id']) #category is playlist ID
-        predictions = dt.predict(df_test[features])
+        max_accuracy = 0.0
+        max_split = 0
+        max_features = []
+        max_predictions = None
+        max_dt = None
+        for subset_size in range(1, len(audio_features_list)):
+            features_list = findsubsets(audio_features_list, subset_size)
+            for features in features_list:
+                # print features
+                for split in range(1, 30):
+                    dt = tree.DecisionTreeClassifier(min_samples_split=split) # parameter is optional
+                    dt.fit(df_train[list(features)],df_train['original_playlist_id']) #category is playlist ID
+                    predictions = dt.predict(df_test[list(features)])
 
-        print "******************* final result *******************"
-        # for test_row in df_test:
-        #     print test_row
-            #print tracks_dict[test_row['id']]
-        playlist_titles = []
-        for prediction in predictions:
-            playlist_titles.append(playlist_id_to_name[prediction])
-        df_predictions = pd.DataFrame({'prediction': playlist_titles})
-        df_test_with_predictions = pd.concat([df_test, df_predictions], axis = 1)
+                    # print "******************* final result *******************"
+                    # for test_row in df_test:
+                    #     print test_row
+                        #print tracks_dict[test_row['id']]
+                    playlist_titles = []
+                    for prediction in predictions:
+                        playlist_titles.append(playlist_id_to_name[prediction])
+                    df_predictions = pd.DataFrame({'prediction': playlist_titles})
+                    df_test_with_predictions = pd.concat([df_test, df_predictions], axis = 1)
 
 
+                    correct = 0
+                    for index, row in df_test_with_predictions.iterrows():
+                        # print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
+                        if row['prediction'] == row['correct_playlist']: correct += 1
+                    accuracy = float(correct)/float(len(df_test_with_predictions))
+                    if accuracy > max_accuracy:
+                        max_accuracy = accuracy
+                        max_split = split
+                        max_features = features
+                        max_predictions  = df_test_with_predictions
+                        max_dt = dt
 
-        for index, row in df_test_with_predictions.iterrows():
-            print tracks_dict[row['id']], row['prediction']
 
-
+        print "max accuracy:", max_accuracy, "| max split:", max_split, "| max features:", max_features
+        for index, row in max_predictions.iterrows():
+            print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
+        tree.export_graphviz(max_dt, out_file='tree.dot') 
 
         # Calculate accuracy
         # numtrain = len(songsTrain)
         # numtest = len(songsTest)
         # correct = 0
-        # for i in range(numtest):
-        #     print 'Predicted:', predictions[i], ' Actual:', citiesTest.loc[numtrain+i]['category']
+        # for i in range(df_test_with_predictions):
+        #     print 'Predicted:', df_test_with_predictions['prediction'], ' Actual:', df_test_with_predictions['correct_playlist']
         #     if predictions[i] == citiesTest.loc[numtrain+i]['category']: correct +=1
         # print 'Accuracy:', float(correct)/float(numtest)
         
