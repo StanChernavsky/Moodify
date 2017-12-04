@@ -10,11 +10,12 @@ import math
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit']
 feature_weight = {u'danceability': 1, u'valence': 1, u'energy':1 , u'tempo':1, u'loudness':1, u'acousticness':1, u'speechiness':1, u'liveness':1, 'release_decade':0, 'explicit':0}
-MAX_ITERS = 1000
+MAX_ITERS = 100
 K = 4
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
 tracks_dict = {}
+playlist_id_to_name = {}
 
 playlist_titles = ["Danceable", "Classical", "XXX", "Country", "Clusterfuck"]
 
@@ -38,6 +39,7 @@ def process_playlists(sp, username, playlists):
                 continue
             else:
                 print "added", playlist['name']
+            playlist_id_to_name[playlist['id']] = playlist['name']
             if playlist['name'] == "Clusterfuck":
                 if playlist['id'] not in new_tracks:
                     new_tracks[playlist['id']] = []
@@ -48,8 +50,8 @@ def process_playlists(sp, username, playlists):
                 while tracks['next']:
                     tracks = sp.next(tracks)
                     new_tracks[playlist['id']].append(getTrackIds(tracks))
-            if k_so_far == K: # JUST TO LIMIT IT TO 3 PLAYLISTS FOR NOW
-                break
+            # if k_so_far == K: # JUST TO LIMIT IT TO 3 PLAYLISTS FOR NOW
+            #     break
 
             if playlist['id'] not in all_playlists:
                 all_playlists[playlist['id']] = []
@@ -63,7 +65,7 @@ def process_playlists(sp, username, playlists):
             while tracks['next']:
                 tracks = sp.next(tracks)
                 all_playlists[playlist['id']].append(getTrackIds(tracks))
-            k_so_far += 1
+            # k_so_far += 1
     print "************************************************"
     return (new_tracks, all_playlists)
 
@@ -85,24 +87,35 @@ def get_additional_features(sp, track_id):
 def get_audio_features_for_playlists(sp, playlists):
     playlist_dict = {}
     for playlist_id in playlists:
-        # print playlists[playlist_id]
 
         # get all tracks from playlist
         tracks_in_playlist = []
+        i = 0
 
         for track_id in playlists[playlist_id]:
             if track_id is None or type(track_id) == list:
                 continue
-            audio_features = sp.audio_features(tracks=[track_id]) #dictionary of feature name and value
+
+            audio_features = sp.audio_features(tracks=[track_id])
+            if audio_features[0] is None:
+                print "audio features is empty:", playlist_id, playlist_id_to_name[playlist_id], track_id, tracks_dict[track_id]
+            audio_features[0]['original_playlist_id'] = playlist_id
+
+            if playlist_id_to_name[playlist_id] == "Clusterfuck":
+                if i < 8:
+                    audio_features[0]['correct_playlist'] = "Classical"
+                elif i < 16:
+                    audio_features[0]['correct_playlist'] = "Country"
+                elif i < 24:
+                    audio_features[0]['correct_playlist'] = "Lit"
+                else:
+                    audio_features[0]['correct_playlist'] = "XXX"
+                i += 1
+
             audio_features[0]['release_decade'], audio_features[0]['explicit'] = get_additional_features(sp, track_id)
-            # print "***********AUDIO FEATURES************"
-            # print audio_features
             tracks_in_playlist.append(audio_features[0])
 
-        # print "***********TRACKS IN PLAYLIST************"
-        # print tracks_in_playlist
         playlist_dict[playlist_id] = tracks_in_playlist
-    # print "PRINTING PLAYLIST DICT *********************", playlist_dict
     return playlist_dict
 
 # assumes that playlists is a list of list of tracks
@@ -151,10 +164,7 @@ def computeCentroid(idx, playlist):
 
 def computeDistance(avg_var_dict, track):
     sum_so_far = 0
-    # print "PRINTING OUT AVG_VAR_DICT", avg_var_dict
-    #print "printing out track", track
     for feature in track:
-       # print "printing out feature", feature
         if feature not in audio_features_list:
             continue
         sum_so_far += feature_weight[feature]* ((avg_var_dict[feature][0] - track[feature])**2) / (avg_var_dict[feature][1])
@@ -164,10 +174,10 @@ def computeDistance(avg_var_dict, track):
 
 def updateCentroids():
     new_playlist_for_centroid = [[] for i in range(K)]
-    print "I AM IN UPDATE CENTROIDS AND I SHOULD BE AN L OF L OF DS", playlist_for_centroid
+    #print "I AM IN UPDATE CENTROIDS AND I SHOULD BE AN L OF L OF DS", playlist_for_centroid
     for idx, list_of_dicts_playlist in enumerate(playlist_for_centroid):
 
-        print "I AM SUPPOSED TO BE A FUCKING LIST OF DICTIONARIES", list_of_dicts_playlist
+        #print "I AM SUPPOSED TO BE A FUCKING LIST OF DICTIONARIES", list_of_dicts_playlist
         # playlist should be a list of dictionaries
         centroid = computeCentroid(idx, list_of_dicts_playlist)
         if len(centroid) == 0:
@@ -197,24 +207,18 @@ def introduceNewTracks(new_tracks):
 
 #idx index of the centroid that has to be randomized
 def get_random_centroid(idx):
-    print "WE ARE INSIDE GET RANDOM CENTROID!"
+    # print "WE ARE INSIDE GET RANDOM CENTROID!"
     # print "playlist_for_centroid type:", type(playlist_for_centroid), " ||| ", playlist_for_centroid
    # print ""
     centroid = {}
     playlist_index = random.randint(0, len(playlist_for_centroid)-1)
     while (len(playlist_for_centroid[playlist_index]) < 3):
         playlist_index = random.randint(0, len(playlist_for_centroid)-1)
-    # print "chosen playlist, I SHOULD BE A LIST OF DICTIONARIES", playlist_for_centroid[playlist_index]
-    # print "****************"
-    # print "printing length of playlists", len(playlists), "playlist index", playlist_index, "length of chosen playlist", playlists[playlist_index]
-    # print "printing chosen playlist", playlists[playlist_index]
+
     song_index = random.randint(0, len(playlist_for_centroid[playlist_index])-2)
     while type(playlist_for_centroid[playlist_index][song_index]) != dict :
         song_index = random.randint(0, len(playlist_for_centroid[playlist_index])-2)
     for feature in audio_features_list:
-        # print "******* playlist_index chosen", feature, playlist_for_centroid[playlist_index]
-        # print "******** feature:", feature, playlist_for_centroid[playlist_index][song_index]
-        # print "THIS SHOULD BE TRACK METADATA DICTIONARY", playlist_for_centroid[playlist_index][song_index]
         centroid[feature] = (playlist_for_centroid[playlist_index][song_index][feature], 0)
     playlist_for_centroid[idx].append(playlist_for_centroid[playlist_index][song_index])
     del playlist_for_centroid[playlist_index][song_index]

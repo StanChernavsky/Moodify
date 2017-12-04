@@ -11,7 +11,6 @@ import itertools
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
-#audio_features_list = [u'danceability', u'energy', u'speechiness']
 MAX_ITERS = 1000
 K = 4
 centroids = {}
@@ -105,7 +104,6 @@ def get_audio_features_for_playlists(sp, playlists):
 
             tracks_in_playlist.append(audio_features[0])
         playlist_dict[playlist_id] = tracks_in_playlist
-    # print "PRINTING PLAYLIST DICT *********************", playlist_dict
     return playlist_dict
 
 # assumes that playlists is a list of list of tracks
@@ -144,14 +142,7 @@ if __name__ == '__main__':
     if token:
         sp = client.Spotify(auth=token)
         playlists = sp.user_playlists(username)
-        # processed_playlists is a dict from playlist ID to track IDs
-        # new tracks should be songsTest
         (new_tracks, processed_playlists) = process_playlists(sp, username, playlists)
-
-        # print "******************************* PROCESSED PLAYLISTS", processed_playlists # playlist id to tracks
-        # get audio features
-
-        # dictionary of playlistIDs to tracks
 
         #dict from playlist id to a list of track audio features
         seed_playlists_w_audio_features = get_audio_features_for_playlists(sp, processed_playlists)
@@ -176,19 +167,7 @@ if __name__ == '__main__':
             for track_idx, track_elem in enumerate(df_test_with_audio_features[playlist_key]):
                 track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
                 df_test = df_test.append(track_row, ignore_index=True)
-        # print "PRINTING SEED PLAYLIST", seed_playlists_w_audio_features
 
-
-
-        # f = open('songs.csv','rU')
-        # songs = pd.read_csv(f)
-
-        # songsTrain and songsTest
-
-        # Predict temperature category from other features
-
-        # citiesTrain: all songs
-        # citiesTest: new playlist
         max_accuracy = 0.0
         max_split = 0
         max_features = []
@@ -203,10 +182,6 @@ if __name__ == '__main__':
                     dt.fit(df_train[list(features)],df_train['original_playlist_id']) #category is playlist ID
                     predictions = dt.predict(df_test[list(features)])
 
-                    # print "******************* final result *******************"
-                    # for test_row in df_test:
-                    #     print test_row
-                        #print tracks_dict[test_row['id']]
                     playlist_titles = []
                     for prediction in predictions:
                         playlist_titles.append(playlist_id_to_name[prediction])
@@ -231,15 +206,6 @@ if __name__ == '__main__':
         for index, row in max_predictions.iterrows():
             print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
         tree.export_graphviz(max_dt, out_file='tree.dot') 
-
-        # Calculate accuracy
-        # numtrain = len(songsTrain)
-        # numtest = len(songsTest)
-        # correct = 0
-        # for i in range(df_test_with_predictions):
-        #     print 'Predicted:', df_test_with_predictions['prediction'], ' Actual:', df_test_with_predictions['correct_playlist']
-        #     if predictions[i] == citiesTest.loc[numtrain+i]['category']: correct +=1
-        # print 'Accuracy:', float(correct)/float(numtest)
         
 
     else:
