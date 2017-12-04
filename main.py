@@ -10,7 +10,7 @@ import math
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit']
 feature_weight = {u'danceability': 1, u'valence': 1, u'energy':1 , u'tempo':1, u'loudness':1, u'acousticness':1, u'speechiness':1, u'liveness':1, 'release_decade':0, 'explicit':0}
-MAX_ITERS = 100
+MAX_ITERS = 5
 K = 4
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
@@ -73,12 +73,12 @@ def get_additional_features(sp, track_id):
     track = sp.track(track_id)
     album_id = track["album"]["id"]
     album = sp.album(album_id)
-    if album["release_date"] == None:
-        print "NO RELEASE DATE"
-    print album["release_date"][:3] + "0"
+    # if album["release_date"] == None:
+        # print "NO RELEASE DATE"
+    # print album["release_date"][:3] + "0"
     explicit_score = 1 if track["explicit"] == True else 0
-    if explicit_score == 1:
-        print track["name"]
+    # if explicit_score == 1:
+        # print track["name"]
     return 2020 - int(album["release_date"][:3] + "0"), explicit_score
 
 # dict from playlist to track IDs
@@ -137,6 +137,9 @@ def assignTrackToCentroid(track):
         if min_distance > curr_distance:
             min_distance = curr_distance
             min_idx = centroid
+    # print "***ASSIGNED to"
+    # print min_idx
+    # print "***\n"
     return min_idx
 
 # playlist: a list of tracks (with audio features in them)
@@ -159,6 +162,9 @@ def computeCentroid(idx, playlist):
 
     playlist_for_centroid[idx] = playlist
     #dictionary: feature key: (avg, var)
+    # print "*******COMPUTED CENTROID********"
+    # print avg_var_dict
+    # print "\n"
     return avg_var_dict
 
 
@@ -167,7 +173,11 @@ def computeDistance(avg_var_dict, track):
     for feature in track:
         if feature not in audio_features_list:
             continue
-        sum_so_far += feature_weight[feature]* ((avg_var_dict[feature][0] - track[feature])**2) / (avg_var_dict[feature][1])
+        print "division by "
+        print avg_var_dict[feature][1]
+        sum_so_far += feature_weight[feature]* ((avg_var_dict[feature][0] - track[feature])**2) / (avg_var_dict[feature][1] + 1)
+    # print "*******COMPUTED DISTANCE********"
+    # print sum_so_far**0.5
     return sum_so_far**0.5
 
 
@@ -224,7 +234,6 @@ def get_random_centroid(idx):
     del playlist_for_centroid[playlist_index][song_index]
     return centroid
 
-
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         username = sys.argv[1]
@@ -278,6 +287,7 @@ if __name__ == '__main__':
 
             for idx in empty_cluster_indices:
                 centroids[idx] = get_random_centroid(idx)
+
 
 
             #compare assignment with prev assignment, break if same
