@@ -8,13 +8,8 @@ import random
 import math
 
 
-<<<<<<< HEAD
-audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', u'release_decade', u'explicit', u'log_danceability_and_valence']
-=======
-
-audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit']
-feature_weight = {u'danceability': 1, u'valence': 1, u'energy':1 , u'tempo':1, u'loudness':1, u'acousticness':1, u'speechiness':1, u'liveness':1, 'release_decade':1, 'explicit':1 }
->>>>>>> 56d497740b48c4008ea22c4835e04b2949cf930f
+audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit', 'log_danceability_and_valence']
+feature_weight = {u'danceability': 1, u'valence': 1, u'energy':1 , u'tempo':1, u'loudness':1, u'acousticness':1, u'speechiness':1, u'liveness':1, 'release_decade':1, 'explicit':1, 'log_danceability_and_valence':1 }
 MAX_ITERS = 1000
 K = 4
 centroids = {}
