@@ -10,14 +10,14 @@ import math
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit']
 feature_weight = {u'danceability': 1, u'valence': 1, u'energy':1 , u'tempo':1, u'loudness':1, u'acousticness':1, u'speechiness':1, u'liveness':1, 'release_decade':0, 'explicit':0}
-MAX_ITERS = 5
+MAX_ITERS = 10
 K = 4
 centroids = {}
 playlist_for_centroid = [[] for i in range(K)]
 tracks_dict = {}
 playlist_id_to_name = {}
 
-playlist_titles = ["Danceable", "Classical", "XXX", "Country", "Clusterfuck"]
+playlist_titles = ["Lit", "Classical", "XXX", "Country", "Clusterfuck"]
 
 def getTrackIds(tracks):
     track_ids = []
@@ -86,6 +86,8 @@ def get_additional_features(sp, track_id):
 # TODO: change to "features" than "audio features"
 def get_audio_features_for_playlists(sp, playlists):
     playlist_dict = {}
+    # track_to_correct_playlist = {}
+
     for playlist_id in playlists:
 
         # get all tracks from playlist
@@ -104,12 +106,17 @@ def get_audio_features_for_playlists(sp, playlists):
             if playlist_id_to_name[playlist_id] == "Clusterfuck":
                 if i < 8:
                     audio_features[0]['correct_playlist'] = "Classical"
+                    # track_to_correct_playlist[track_id] = "Classical"
                 elif i < 16:
                     audio_features[0]['correct_playlist'] = "Country"
+                    # track_to_correct_playlist[track_id] = "Country"
+
                 elif i < 24:
                     audio_features[0]['correct_playlist'] = "Lit"
+                    # track_to_correct_playlist[track_id] = "Lit"
                 else:
                     audio_features[0]['correct_playlist'] = "XXX"
+                    # track_to_correct_playlist[track_id] = "XXX"
                 i += 1
 
             audio_features[0]['release_decade'], audio_features[0]['explicit'] = get_additional_features(sp, track_id)
