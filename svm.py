@@ -6,7 +6,7 @@ import sys
 import client as client
 import spotipy.util as util
 import random
-from sklearn import tree, linear_model
+from sklearn import tree, linear_model, svm
 import itertools
 
 
@@ -150,21 +150,17 @@ def trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title):
 
     df_test_with_audio_features = get_audio_features_for_playlists(sp, new_tracks)
     df_test = pd.DataFrame()
-    df_test_label = pd.DataFrame()
     for playlist_key in df_test_with_audio_features:
         for track_idx, track_elem in enumerate(df_test_with_audio_features[playlist_key]):
             track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
             df_test = df_test.append(track_row, ignore_index=True)
-            df_test_label = df_test_label.append(pd.Series(playlist_id_to_name[playlist_key] == playlist_title), ignore_index=True)
     df_test = df_test[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
-    
     log_reg = linear_model.LogisticRegression(C=1e5)
 
     log_reg.fit(df_train, df_train_label.values.ravel())
 
     print "DF PREDICT RESULTS FOR", playlist_title, "********"
     print log_reg.predict(df_test)
-    print log_reg.score(df_test, df_test_label.values.ravel())
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
