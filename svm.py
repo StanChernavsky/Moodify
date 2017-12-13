@@ -128,10 +128,7 @@ def introduceNewTracks(new_tracks):
         playlist_for_centroid[idx].append(track)
         #TODO
 
-def trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title):
-    if playlist_title == "Clusterfuck":
-        return
-    print "************************* TRAINING A CLASSIFIER FOR:", playlist_title, "*******************"
+def trainForEachPlaylist(seed_playlists_w_audio_features):
     df_train = pd.DataFrame()
     df_train_label = pd.DataFrame()
 
@@ -141,7 +138,7 @@ def trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title):
             track_row = pd.Series(seed_playlists_w_audio_features[playlist_key][track_idx])
             # track_row = track_row.assign(original_playlist=pd.Series(playlist_key).values)
             df_train = df_train.append(track_row, ignore_index=True)
-            df_train_label = df_train_label.append(pd.Series(playlist_id_to_name[playlist_key] == playlist_title), ignore_index=True)
+            df_train_label = df_train_label.append(pd.Series(playlist_id_to_name[playlist_key]), ignore_index=True)
 
     df_train = df_train[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
 
@@ -154,13 +151,25 @@ def trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title):
         for track_idx, track_elem in enumerate(df_test_with_audio_features[playlist_key]):
             track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
             df_test = df_test.append(track_row, ignore_index=True)
-    df_test = df_test[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
-    log_reg = linear_model.LogisticRegression(C=1e5)
+    df_test_features_only = df_test[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
+    
+    clf = svm.SVC()
 
-    log_reg.fit(df_train, df_train_label.values.ravel())
+    clf.fit(df_train, df_train_label.values.ravel())
 
-    print "DF PREDICT RESULTS FOR", playlist_title, "********"
-    print log_reg.predict(df_test)
+    svm_res = clf.predict(df_test_features_only)
+    i = 0
+    correct = 0
+    for idx, df_test_row in df_test.iterrows():
+        print tracks_dict[df_test_row['id']], "|||", \
+        "correct: ", df_test_row['correct_playlist'], "|||", \
+        "predicted:", svm_res[i]
+        if (df_test_row['correct_playlist'] == svm_res[i]):
+            correct += 1
+        i += 1
+    print "# CORRECT:", correct, "ACCURACY SCORE:", float(correct)/32
+    
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -181,8 +190,8 @@ if __name__ == '__main__':
         seed_playlists_w_audio_features = get_audio_features_for_playlists(sp, processed_playlists)
         print seed_playlists_w_audio_features
 
-        for playlist_title in playlist_titles:
-            trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title)
+        #for playlist_title in playlist_titles:
+        trainForEachPlaylist(seed_playlists_w_audio_features)
 
 
         # max_accuracy = 0.0
