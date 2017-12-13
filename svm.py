@@ -215,46 +215,5 @@ if __name__ == '__main__':
         #for playlist_title in playlist_titles:
         trainForEachPlaylist(seed_playlists_w_audio_features)
 
-
-        # max_accuracy = 0.0
-        # max_split = 0
-        # max_features = []
-        # max_predictions = None
-        # max_dt = None
-        # for subset_size in range(1, len(audio_features_list)):
-        #     features_list = findsubsets(audio_features_list, subset_size)
-        #     for features in features_list:
-        #         # print features
-        #         for split in range(1, 30):
-        #             dt = tree.DecisionTreeClassifier(min_samples_split=split) # parameter is optional
-        #             dt.fit(df_train[list(features)],df_train['original_playlist_id']) #category is playlist ID
-        #             predictions = dt.predict(df_test[list(features)])
-
-        #             playlist_titles = []
-        #             for prediction in predictions:
-        #                 playlist_titles.append(playlist_id_to_name[prediction])
-        #             df_predictions = pd.DataFrame({'prediction': playlist_titles})
-        #             df_test_with_predictions = pd.concat([df_test, df_predictions], axis = 1)
-
-
-        #             correct = 0
-        #             for index, row in df_test_with_predictions.iterrows():
-        #                 # print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
-        #                 if row['prediction'] == row['correct_playlist']: correct += 1
-        #             accuracy = float(correct)/float(len(df_test_with_predictions))
-        #             if accuracy > max_accuracy:
-        #                 max_accuracy = accuracy
-        #                 max_split = split
-        #                 max_features = features
-        #                 max_predictions  = df_test_with_predictions
-        #                 max_dt = dt
-
-
-        # print "max accuracy:", max_accuracy, "| max split:", max_split, "| max features:", max_features
-        # for index, row in max_predictions.iterrows():
-        #     print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
-        # tree.export_graphviz(max_dt, out_file='tree.dot') 
-        
-
     else:
         print "Can't get token for", username
