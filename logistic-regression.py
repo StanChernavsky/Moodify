@@ -128,6 +128,39 @@ def introduceNewTracks(new_tracks):
         playlist_for_centroid[idx].append(track)
         #TODO
 
+def trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title):
+    if playlist_title == "Clusterfuck":
+        return
+    print "************************* TRAINING A CLASSIFIER FOR:", playlist_title, "*******************"
+    df_train = pd.DataFrame()
+    df_train_label = pd.DataFrame()
+
+    for playlist_key in seed_playlists_w_audio_features:
+        for track_idx, track_elem in enumerate(seed_playlists_w_audio_features[playlist_key]):
+            #track_row = pd.DataFrame.from_dict(seed_playlists_w_audio_features[playlist_key][track_idx], index = [i])
+            track_row = pd.Series(seed_playlists_w_audio_features[playlist_key][track_idx])
+            # track_row = track_row.assign(original_playlist=pd.Series(playlist_key).values)
+            df_train = df_train.append(track_row, ignore_index=True)
+            df_train_label = df_train_label.append(pd.Series(playlist_id_to_name[playlist_key] == playlist_title), ignore_index=True)
+
+    df_train = df_train[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
+
+    # print "DF TRAIN LABEL", playlist_title, "********"
+    # print df_train_label
+
+    df_test_with_audio_features = get_audio_features_for_playlists(sp, new_tracks)
+    df_test = pd.DataFrame()
+    for playlist_key in df_test_with_audio_features:
+        for track_idx, track_elem in enumerate(df_test_with_audio_features[playlist_key]):
+            track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
+            df_test = df_test.append(track_row, ignore_index=True)
+    df_test = df_test[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
+    log_reg = linear_model.LogisticRegression(C=1e5)
+
+    log_reg.fit(df_train, df_train_label.values.ravel())
+
+    print "DF PREDICT RESULTS FOR", playlist_title, "********"
+    print log_reg.predict(df_test)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -148,35 +181,9 @@ if __name__ == '__main__':
         seed_playlists_w_audio_features = get_audio_features_for_playlists(sp, processed_playlists)
         print seed_playlists_w_audio_features
 
-        df_train_country = pd.DataFrame()
-        df_train_country_label = pd.DataFrame()
+        for playlist_title in playlist_titles:
+            trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title)
 
-        for playlist_key in seed_playlists_w_audio_features:
-            for track_idx, track_elem in enumerate(seed_playlists_w_audio_features[playlist_key]):
-                #track_row = pd.DataFrame.from_dict(seed_playlists_w_audio_features[playlist_key][track_idx], index = [i])
-                track_row = pd.Series(seed_playlists_w_audio_features[playlist_key][track_idx])
-                # track_row = track_row.assign(original_playlist=pd.Series(playlist_key).values)
-                df_train_country = df_train_country.append(track_row, ignore_index=True)
-                df_train_country_label = df_train_country_label.append(pd.Series(playlist_id_to_name[playlist_key] == "Country"), ignore_index=True)
-
-        df_train_country = df_train_country[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
-
-        print "DF TRAIN LABEL ********"
-        print df_train_country_label
-
-        df_test_with_audio_features = get_audio_features_for_playlists(sp, new_tracks)
-        df_test_country = pd.DataFrame()
-        for playlist_key in df_test_with_audio_features:
-            for track_idx, track_elem in enumerate(df_test_with_audio_features[playlist_key]):
-                track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
-                df_test_country = df_test_country.append(track_row, ignore_index=True)
-        df_test_country = df_test_country[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
-        log_reg_country = linear_model.LogisticRegression(C=1e5)
-
-        log_reg_country.fit(df_train_country, df_train_country_label.values.ravel())
-
-        print "DF TRAIN GET PARAMS ********"
-        print log_reg_country.predict(df_test_country)
 
         # max_accuracy = 0.0
         # max_split = 0
