@@ -8,6 +8,8 @@ import spotipy.util as util
 import random
 from sklearn import tree
 import itertools
+import csv
+from sklearn.metrics import confusion_matrix
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
@@ -172,6 +174,7 @@ if __name__ == '__main__':
         max_split = 0
         max_features = []
         max_predictions = None
+        max_predictions_only = None
         max_dt = None
         for subset_size in range(1, len(audio_features_list)):
             features_list = findsubsets(audio_features_list, subset_size)
@@ -198,14 +201,44 @@ if __name__ == '__main__':
                         max_accuracy = accuracy
                         max_split = split
                         max_features = features
-                        max_predictions  = df_test_with_predictions
+                        max_predictions = df_test_with_predictions
                         max_dt = dt
+                        max_predictions_only = predictions
 
 
         print "max accuracy:", max_accuracy, "| max split:", max_split, "| max features:", max_features
+        
+        correct_for_each_playlist = {"Lit":0, "Classical":0, "XXX":0, "Country":0}
+        y_true = [0] * 32
+
+        i = 0
         for index, row in max_predictions.iterrows():
+            y_true[i] = row['correct_playlist']
+            if (row['prediction'] == row['correct_playlist']):
+                correct_for_each_playlist[row['correct_playlist']] += 1
+            
             print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
+            i += 1
+
+        for entry_key in correct_for_each_playlist:
+            correct_for_each_playlist[entry_key] /= 8.0
+        with open('true-positives-decision-tree.csv', 'w') as csvfile:
+            fieldnames = ["Lit", "Classical", "XXX", "Country"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+            writer.writeheader()
+            writer.writerow(correct_for_each_playlist)
+
+        y_pred = []
+        for elem in max_predictions_only:
+            y_pred.append(playlist_id_to_name[elem])
+
+        print "PRINTING Y_TRUE AND Y_PRED"
+        print y_true, y_pred
+        conf_mat = confusion_matrix(y_true, y_pred)
         tree.export_graphviz(max_dt, out_file='tree.dot') 
+        with open('confusion-matrix-decision-tree.csv', 'w') as f:
+            f.write(np.array2string(conf_mat, separator=', '))
         
 
     else:
