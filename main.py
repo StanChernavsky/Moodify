@@ -86,7 +86,7 @@ def get_additional_features(sp, track_id):
 # TODO: change to "features" than "audio features"
 def get_audio_features_for_playlists(sp, playlists):
     playlist_dict = {}
-    # track_to_correct_playlist = {}
+    track_to_correct_playlist = {}
 
     for playlist_id in playlists:
 
