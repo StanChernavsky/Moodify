@@ -8,6 +8,8 @@ import spotipy.util as util
 import random
 from sklearn import tree, linear_model, svm
 import itertools
+import csv
+from sklearn.metrics import confusion_matrix
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
@@ -160,15 +162,35 @@ def trainForEachPlaylist(seed_playlists_w_audio_features):
     svm_res = clf.predict(df_test_features_only)
     i = 0
     correct = 0
+    correct_for_each_playlist = {"Lit":0, "Classical":0, "XXX":0, "Country":0}
+    y_true = [0] * 32
     for idx, df_test_row in df_test.iterrows():
         print tracks_dict[df_test_row['id']], "|||", \
         "correct: ", df_test_row['correct_playlist'], "|||", \
         "predicted:", svm_res[i]
+        y_true[i] = df_test_row['correct_playlist']
         if (df_test_row['correct_playlist'] == svm_res[i]):
+            correct_for_each_playlist[df_test_row['correct_playlist']] += 1
             correct += 1
         i += 1
-    print "# CORRECT:", correct, "ACCURACY SCORE:", float(correct)/32
     
+    print "# CORRECT:", correct, "ACCURACY SCORE:", float(correct)/32
+
+    for entry_key in correct_for_each_playlist:
+        correct_for_each_playlist[entry_key] /= 8.0
+
+    print correct_for_each_playlist
+    with open('true-positives-svm.csv', 'w') as csvfile:
+        fieldnames = ["Lit", "Classical", "XXX", "Country"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerow(correct_for_each_playlist)
+    y_pred = svm_res
+    conf_mat = confusion_matrix(y_true, y_pred)
+
+    with open('confusion-matrix-svm.csv', 'w') as f:
+        f.write(np.array2string(conf_mat, separator=', '))
 
 
 if __name__ == '__main__':
@@ -192,47 +214,6 @@ if __name__ == '__main__':
 
         #for playlist_title in playlist_titles:
         trainForEachPlaylist(seed_playlists_w_audio_features)
-
-
-        # max_accuracy = 0.0
-        # max_split = 0
-        # max_features = []
-        # max_predictions = None
-        # max_dt = None
-        # for subset_size in range(1, len(audio_features_list)):
-        #     features_list = findsubsets(audio_features_list, subset_size)
-        #     for features in features_list:
-        #         # print features
-        #         for split in range(1, 30):
-        #             dt = tree.DecisionTreeClassifier(min_samples_split=split) # parameter is optional
-        #             dt.fit(df_train[list(features)],df_train['original_playlist_id']) #category is playlist ID
-        #             predictions = dt.predict(df_test[list(features)])
-
-        #             playlist_titles = []
-        #             for prediction in predictions:
-        #                 playlist_titles.append(playlist_id_to_name[prediction])
-        #             df_predictions = pd.DataFrame({'prediction': playlist_titles})
-        #             df_test_with_predictions = pd.concat([df_test, df_predictions], axis = 1)
-
-
-        #             correct = 0
-        #             for index, row in df_test_with_predictions.iterrows():
-        #                 # print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
-        #                 if row['prediction'] == row['correct_playlist']: correct += 1
-        #             accuracy = float(correct)/float(len(df_test_with_predictions))
-        #             if accuracy > max_accuracy:
-        #                 max_accuracy = accuracy
-        #                 max_split = split
-        #                 max_features = features
-        #                 max_predictions  = df_test_with_predictions
-        #                 max_dt = dt
-
-
-        # print "max accuracy:", max_accuracy, "| max split:", max_split, "| max features:", max_features
-        # for index, row in max_predictions.iterrows():
-        #     print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
-        # tree.export_graphviz(max_dt, out_file='tree.dot') 
-        
 
     else:
         print "Can't get token for", username

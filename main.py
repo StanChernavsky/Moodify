@@ -6,6 +6,7 @@ import client as client
 import spotipy.util as util
 import random
 import math
+import csv
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit']

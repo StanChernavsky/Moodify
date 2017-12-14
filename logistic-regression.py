@@ -8,6 +8,8 @@ import spotipy.util as util
 import random
 from sklearn import tree, linear_model
 import itertools
+import csv
+from sklearn.metrics import confusion_matrix
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
@@ -19,6 +21,7 @@ tracks_dict = {}
 
 playlist_titles = ["Lit", "Classical", "XXX", "Country", "Clusterfuck"]
 playlist_id_to_name = {}
+correct_for_each_playlist = {"Lit":0, "Classical":0, "XXX":0, "Country":0}
 
 def getTrackIds(tracks):
     track_ids = []
@@ -156,15 +159,28 @@ def trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title):
             track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
             df_test = df_test.append(track_row, ignore_index=True)
             df_test_label = df_test_label.append(pd.Series(playlist_id_to_name[playlist_key] == playlist_title), ignore_index=True)
-    df_test = df_test[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
+    df_test_only_features = df_test[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
     
     log_reg = linear_model.LogisticRegression(C=1e5)
 
     log_reg.fit(df_train, df_train_label.values.ravel())
 
     print "DF PREDICT RESULTS FOR", playlist_title, "********"
-    print log_reg.predict(df_test)
-    print log_reg.score(df_test, df_test_label.values.ravel())
+    log_reg_predictions = log_reg.predict(df_test_only_features)
+    print log_reg_predictions
+    print log_reg.score(df_test_only_features, df_test_label.values.ravel())
+
+    i = 0
+    print "LENGTH OF DF_TEST_LABEL", len(df_test_label)
+    for idx, df_test_row in df_test.iterrows():
+        if log_reg_predictions[i] == 1.0 and df_test_row['correct_playlist'] == playlist_title:
+            correct_for_each_playlist[playlist_title] += 1
+        i += 1
+
+    
+
+
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -188,45 +204,17 @@ if __name__ == '__main__':
         for playlist_title in playlist_titles:
             trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title)
 
+        for entry_key in correct_for_each_playlist:
+            correct_for_each_playlist[entry_key] /= 8.0
 
-        # max_accuracy = 0.0
-        # max_split = 0
-        # max_features = []
-        # max_predictions = None
-        # max_dt = None
-        # for subset_size in range(1, len(audio_features_list)):
-        #     features_list = findsubsets(audio_features_list, subset_size)
-        #     for features in features_list:
-        #         # print features
-        #         for split in range(1, 30):
-        #             dt = tree.DecisionTreeClassifier(min_samples_split=split) # parameter is optional
-        #             dt.fit(df_train[list(features)],df_train['original_playlist_id']) #category is playlist ID
-        #             predictions = dt.predict(df_test[list(features)])
+        print correct_for_each_playlist
+        with open('true-positives-log-reg.csv', 'w') as csvfile:
+            fieldnames = ["Lit", "Classical", "XXX", "Country"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-        #             playlist_titles = []
-        #             for prediction in predictions:
-        #                 playlist_titles.append(playlist_id_to_name[prediction])
-        #             df_predictions = pd.DataFrame({'prediction': playlist_titles})
-        #             df_test_with_predictions = pd.concat([df_test, df_predictions], axis = 1)
-
-
-        #             correct = 0
-        #             for index, row in df_test_with_predictions.iterrows():
-        #                 # print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
-        #                 if row['prediction'] == row['correct_playlist']: correct += 1
-        #             accuracy = float(correct)/float(len(df_test_with_predictions))
-        #             if accuracy > max_accuracy:
-        #                 max_accuracy = accuracy
-        #                 max_split = split
-        #                 max_features = features
-        #                 max_predictions  = df_test_with_predictions
-        #                 max_dt = dt
-
-
-        # print "max accuracy:", max_accuracy, "| max split:", max_split, "| max features:", max_features
-        # for index, row in max_predictions.iterrows():
-        #     print "Track:", tracks_dict[row['id']], "| Predicted: ", row['prediction'], "| Actual:", row['correct_playlist']
-        # tree.export_graphviz(max_dt, out_file='tree.dot') 
+            writer.writeheader()
+            writer.writerow(correct_for_each_playlist)
+    
         
 
     else:
