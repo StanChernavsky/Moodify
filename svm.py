@@ -92,11 +92,11 @@ def get_audio_features_for_playlists(sp, playlists):
             audio_features[0]['original_playlist_id'] = playlist_id
 
             if playlist_id_to_name[playlist_id] == "Clusterfuck":
-                if i < 8:
+                if i < 25:
                     audio_features[0]['correct_playlist'] = "Classical"
-                elif i < 16:
+                elif i < 50:
                     audio_features[0]['correct_playlist'] = "Country"
-                elif i < 24:
+                elif i < 75:
                     audio_features[0]['correct_playlist'] = "Lit"
                 else:
                     audio_features[0]['correct_playlist'] = "XXX"
@@ -142,6 +142,7 @@ def trainForEachPlaylist(seed_playlists_w_audio_features):
             df_train = df_train.append(track_row, ignore_index=True)
             df_train_label = df_train_label.append(pd.Series(playlist_id_to_name[playlist_key]), ignore_index=True)
 
+    print df_train
     df_train = df_train[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
 
     # print "DF TRAIN LABEL", playlist_title, "********"

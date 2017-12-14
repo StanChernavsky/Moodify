@@ -70,6 +70,7 @@ def process_playlists(sp, username, playlists):
                 all_playlists[playlist['id']].append(getTrackIds(tracks))
             # k_so_far += 1
     print "************************************************"
+    print new_tracks, all_playlists
     return (new_tracks, all_playlists)
 
 # dict from playlist to track IDs
@@ -92,11 +93,11 @@ def get_audio_features_for_playlists(sp, playlists):
             audio_features[0]['original_playlist_id'] = playlist_id
 
             if playlist_id_to_name[playlist_id] == "Clusterfuck":
-                if i < 8:
+                if i < 25:
                     audio_features[0]['correct_playlist'] = "Classical"
-                elif i < 16:
+                elif i < 50:
                     audio_features[0]['correct_playlist'] = "Country"
-                elif i < 24:
+                elif i < 75:
                     audio_features[0]['correct_playlist'] = "Lit"
                 else:
                     audio_features[0]['correct_playlist'] = "XXX"

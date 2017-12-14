@@ -18,7 +18,7 @@ playlist_for_centroid = [[] for i in range(K)]
 tracks_dict = {}
 playlist_id_to_name = {}
 
-playlist_titles = ["Lit", "Classical", "XXX", "Country", "Clusterfuck"]
+playlist_titles = ["Lit-copy", "Classical-copy", "XXX-copy", "Country-copy", "Clusterfuck-copy"]
 
 def getTrackIds(tracks):
     track_ids = []
@@ -41,7 +41,7 @@ def process_playlists(sp, username, playlists):
             else:
                 print "added", playlist['name']
             playlist_id_to_name[playlist['id']] = playlist['name']
-            if playlist['name'] == "Clusterfuck":
+            if playlist['name'] == "Clusterfuck-copy":
                 if playlist['id'] not in new_tracks:
                     new_tracks[playlist['id']] = []
                 results = sp.user_playlist(username, playlist['id'], fields="tracks,next")
@@ -104,19 +104,19 @@ def get_audio_features_for_playlists(sp, playlists):
                 print "audio features is empty:", playlist_id, playlist_id_to_name[playlist_id], track_id, tracks_dict[track_id]
             audio_features[0]['original_playlist_id'] = playlist_id
 
-            if playlist_id_to_name[playlist_id] == "Clusterfuck":
+            if playlist_id_to_name[playlist_id] == "Clusterfuck-copy":
                 if i < 8:
-                    audio_features[0]['correct_playlist'] = "Classical"
+                    audio_features[0]['correct_playlist'] = "Classical-copy"
                     # track_to_correct_playlist[track_id] = "Classical"
                 elif i < 16:
-                    audio_features[0]['correct_playlist'] = "Country"
+                    audio_features[0]['correct_playlist'] = "Country-copy"
                     # track_to_correct_playlist[track_id] = "Country"
 
                 elif i < 24:
-                    audio_features[0]['correct_playlist'] = "Lit"
+                    audio_features[0]['correct_playlist'] = "Lit-copy"
                     # track_to_correct_playlist[track_id] = "Lit"
                 else:
-                    audio_features[0]['correct_playlist'] = "XXX"
+                    audio_features[0]['correct_playlist'] = "XXX-copy"
                     # track_to_correct_playlist[track_id] = "XXX"
                 i += 1
 
