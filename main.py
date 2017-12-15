@@ -140,7 +140,7 @@ def get_audio_features_for_playlists(sp, playlists):
         playlist_dict[playlist_id] = tracks_in_playlist
 
     for playlist_id in playlist_dict:
-        original_playlist_lengths[playlist_id_to_name[playlist_id]]  = len(playlist_dict[playlist_id]) + 8
+        original_playlist_lengths[playlist_id_to_name[playlist_id]]  = len(playlist_dict[playlist_id]) + 25
 
 
     return playlist_dict, track_to_correct_playlist
@@ -401,18 +401,12 @@ if __name__ == '__main__':
             print computeCentroid(i, p, False)
             print "******************************************************************"
 
-         with open('true-positives-clustering.csv', 'w') as csvfile:
+        with open('true-positives-clustering.csv', 'w') as csvfile:
             fieldnames = ["centroid-0", "centroid-1", "centroid-2", "centroid-3"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
             writer.writeheader()
             writer.writerow(correct_for_each_playlist)
-    y_pred = svm_res
-    conf_mat = confusion_matrix(y_true, y_pred)
-
-    with open('confusion-matrix-svm.csv', 'w') as f:
-        f.write(np.array2string(conf_mat, separator=', '))
-
     else:
         print "Can't get token for", username
     end = time.time()

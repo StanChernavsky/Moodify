@@ -1,0 +1,101 @@
+max accuracy: 0.89 | max split: 3 | max features: (u'danceability', u'valence', u'energy', u'tempo', u'acousticness', u'speechiness')
+Track: (u"She's More", u'Andy Griggs') | Predicted:  Country | Actual: Country
+Track: (u'This Is Me Missing You', u'James House') | Predicted:  Country | Actual: Country
+Track: (u'If I Never Stop Loving You', u'David Kersh') | Predicted:  Country | Actual: Country
+Track: (u'On Second Thought', u'Eddie Rabbitt') | Predicted:  Country | Actual: Country
+Track: (u'My Heart Has A History', u'Paul Brandt') | Predicted:  Country | Actual: Country
+Track: (u'Your Love Amazes Me', u'John Berry') | Predicted:  Country | Actual: Country
+Track: (u'Star Of The Show', u'Thomas Rhett') | Predicted:  Country | Actual: Country
+Track: (u'Written in the Sand', u'Old Dominion') | Predicted:  XXX | Actual: Country
+Track: (u'Small Town Boy', u'Dustin Lynch') | Predicted:  Country | Actual: Country
+Track: (u"Ain't Always Pretty", u'Logan Mize') | Predicted:  Country | Actual: Country
+Track: (u'Meant to Be', u'Bebe Rexha') | Predicted:  Country | Actual: Country
+Track: (u'Body Like A Back Road', u'Sam Hunt') | Predicted:  XXX | Actual: Country
+Track: (u'Take Back Home Girl (Feat. Tori Kelly)', u'Chris Lane') | Predicted:  Country | Actual: Country
+Track: (u'Losing Sleep', u'Chris Young') | Predicted:  XXX | Actual: Country
+Track: (u'Close', u'Ryan Kinder') | Predicted:  Country | Actual: Country
+Track: (u"I'm Gonna Miss You, Girl", u'Michael Martin Murphey') | Predicted:  Country | Actual: Country
+Track: (u"I'll Be Faithful to You", u'Glen Campbell') | Predicted:  Country | Actual: Country
+Track: (u'I Sure Can Smell the Rain', u'BlackHawk') | Predicted:  Country | Actual: Country
+Track: (u"Don't Close Your Eyes", u'Keith Whitley') | Predicted:  Country | Actual: Country
+Track: (u"She's In Love With The Boy", u'Trisha Yearwood') | Predicted:  Country | Actual: Country
+Track: (u"My Life's Work", u'Boy Howdy') | Predicted:  Lit | Actual: Country
+Track: (u"Killin' Time", u'Clint Black') | Predicted:  Country | Actual: Country
+Track: (u'What Kind Of Fool Do You Think I Am', u'Lee Roy Parnell') | Predicted:  Country | Actual: Country
+Track: (u'Pickup Man', u'Joe Diffie') | Predicted:  Lit | Actual: Country
+Track: (u"Thinkin' Problem", u'David Ball') | Predicted:  Country | Actual: Country
+Track: (u'Come and See Me (feat. Drake)', u'PARTYNEXTDOOR') | Predicted:  XXX | Actual: XXX
+Track: (u'BeFoUr', u'ZAYN') | Predicted:  XXX | Actual: XXX
+Track: (u'dRuNk', u'ZAYN') | Predicted:  XXX | Actual: XXX
+Track: (u'The Morning', u'The Weeknd') | Predicted:  XXX | Actual: XXX
+Track: (u'Back 2 U', u'Joey Gatto') | Predicted:  XXX | Actual: XXX
+Track: (u'Sex With Me', u'Rihanna') | Predicted:  XXX | Actual: XXX
+Track: (u'Weekend (feat. Miguel)', u'Mac Miller') | Predicted:  XXX | Actual: XXX
+Track: (u'Heart Skipped a Beat', u'The xx') | Predicted:  XXX | Actual: XXX
+Track: (u'Coffee (F***ing)', u'Miguel') | Predicted:  Country | Actual: XXX
+Track: (u'Sure Thing', u'Miguel') | Predicted:  Lit | Actual: XXX
+Track: (u'Bite My Tongue', u'The Beach') | Predicted:  XXX | Actual: XXX
+Track: (u'Playing for You', u'Joe Hertz') | Predicted:  XXX | Actual: XXX
+Track: (u'Passionfruit', u'Drake') | Predicted:  XXX | Actual: XXX
+Track: (u'Keep On', u'Kehlani') | Predicted:  XXX | Actual: XXX
+Track: (u'thankful', u'Meltycanon') | Predicted:  XXX | Actual: XXX
+Track: (u'Gemini Feed', u'Banks') | Predicted:  XXX | Actual: XXX
+Track: (u'Fuck With Myself', u'Banks') | Predicted:  XXX | Actual: XXX
+Track: (u'Pink + White', u'Frank Ocean') | Predicted:  XXX | Actual: XXX
+Track: (u'Ivy', u'Frank Ocean') | Predicted:  XXX | Actual: XXX
+Track: (u'Attached', u'Mickey Blue') | Predicted:  XXX | Actual: XXX
+Track: (u'The Way (feat. Chance the Rapper)', u'Kehlani') | Predicted:  XXX | Actual: XXX
+Track: (u'My Love (feat. Drake)', u'Majid Jordan') | Predicted:  XXX | Actual: XXX
+Track: (u'Tell Your Friends', u'The Weeknd') | Predicted:  XXX | Actual: XXX
+Track: (u'Prisoner', u'The Weeknd') | Predicted:  XXX | Actual: XXX
+Track: (u'Good For You', u'Selena Gomez') | Predicted:  XXX | Actual: XXX
+Track: (u'SHY', u'The Magician') | Predicted:  Lit | Actual: Lit
+Track: (u"Sonnentanz - Sun Don't Shine", u'Klangkarussell') | Predicted:  XXX | Actual: Lit
+Track: (u'The Heat (I Wanna Dance With Somebody)', u'Ralph Felix') | Predicted:  Lit | Actual: Lit
+Track: (u"Don't Let Me Down", u'The Chainsmokers') | Predicted:  XXX | Actual: Lit
+Track: (u'Beautiful People - Radio Edit', u'Chris Brown') | Predicted:  Lit | Actual: Lit
+Track: (u'All Stars', u'Martin Solveig') | Predicted:  Lit | Actual: Lit
+Track: (u"The Girl Is Mine feat. Destiny's Child & Brandy", u'99 Souls') | Predicted:  Lit | Actual: Lit
+Track: (u'Hunter', u'Galantis') | Predicted:  XXX | Actual: Lit
+Track: (u'You Got Me Baby - Felon Remix', u'Lushington') | Predicted:  Lit | Actual: Lit
+Track: (u'Rapture - Avicii New Generation Mix', u'Nadia Ali') | Predicted:  Country | Actual: Lit
+Track: (u"Runnin'", u'Low Steppa') | Predicted:  Lit | Actual: Lit
+Track: (u'I Used To Love You (feat. Francci Richard)', u'Jack wins') | Predicted:  Lit | Actual: Lit
+Track: (u"They Don't Know", u'Solo Suspex') | Predicted:  Lit | Actual: Lit
+Track: (u"You Don't Know Me - Radio Edit", u'Jax Jones') | Predicted:  Lit | Actual: Lit
+Track: (u'Kickstarts - Radio Edit', u'Example') | Predicted:  Lit | Actual: Lit
+Track: (u'How Deep Is Your Love', u'Calvin Harris') | Predicted:  Lit | Actual: Lit
+Track: (u'Thinking About It - Radio Edit', u'Just Kiddin') | Predicted:  Lit | Actual: Lit
+Track: (u'Real Life', u'Duke Dumont') | Predicted:  Lit | Actual: Lit
+Track: (u'The Mack - David Zowie Remix', u'Nevada') | Predicted:  Lit | Actual: Lit
+Track: (u'Instruction (feat. Demi Lovato & Stefflon Don)', u'Jax Jones') | Predicted:  Lit | Actual: Lit
+Track: (u'Bump & Grind 2014 - Radio Edit', u'Waze & Odyssey') | Predicted:  Lit | Actual: Lit
+Track: (u'Came Here for Love', u'Sigala') | Predicted:  Lit | Actual: Lit
+Track: (u'Freak', u'R3HAB') | Predicted:  Lit | Actual: Lit
+Track: (u'Be Right There', u'Diplo') | Predicted:  Lit | Actual: Lit
+Track: (u'Fire (Spotie) [feat. Busy Signal]', u'Jus Now') | Predicted:  Lit | Actual: Lit
+Track: (u'Symphony No. 1 in D major, Wq. 183/1: Symphony No. 1 in D major, Wq. 183/1: I. Allegro di molto', u'Carl Philipp Emanuel Bach') | Predicted:  Classical | Actual: Classical
+Track: (u'Symphony No. 8 in C Minor, WAB 108 (1890 edition, ed. L. Nowak): IV. Finale: Feierlich, nicht schnell', u'Anton Bruckner') | Predicted:  Classical | Actual: Classical
+Track: (u'Violin Concerto No.1 in G minor, Op.26: 1. Vorspiel (Allegro moderato)', u'Max Bruch') | Predicted:  Classical | Actual: Classical
+Track: (u'Symphony No.1 in C minor, Op.68: 1. Un poco sostenuto - Allegro - Meno allegro', u'Johannes Brahms') | Predicted:  Classical | Actual: Classical
+Track: (u'Symphony No.4 In E Minor, Op.98: 4. Allegro energico e passionato - Pi\xf9 allegro', u'Johannes Brahms') | Predicted:  Classical | Actual: Classical
+Track: (u'Bizet: Carmen, WD 31, Act 1 Scene 4: No. 5, Havanaise, "L\'amour est un oiseau rebelle" (Carmen, Chorus)', u'Georges Bizet') | Predicted:  Classical | Actual: Classical
+Track: (u'West Side Story: 13. Ballet Sequence - Somewhere', u'Leonard Bernstein') | Predicted:  Classical | Actual: Classical
+Track: (u'Appalachian Spring: Doppio movimento', u'Aaron Copland') | Predicted:  Classical | Actual: Classical
+Track: (u'Symphonie fantastique, Op. 14: Symphonie fantastique, Op. 14: IV. Marche au supplice', u'Hector Berlioz') | Predicted:  Classical | Actual: Classical
+Track: (u'Three Pieces for Orchestra, Op. 6 (1929 Revision): I. Pr\xe4ludium', u'Alban Berg') | Predicted:  Classical | Actual: Classical
+Track: (u"Violin Concerto - 'To the Memory of an Angel': Violin Concerto - 'To the Memory of an Angel': I. Andante - Allegretto", u'Alban Berg') | Predicted:  Classical | Actual: Classical
+Track: (u'Piano Sonata No. 14 in C-Sharp Minor, Op. 27 No. 2 "Moonlight": I. Adagio sostenuto', u'Ludwig van Beethoven') | Predicted:  Classical | Actual: Classical
+Track: (u'Beethoven : Symphony No.9 in D minor Op.125 : II Molto vivace', u'Ludwig van Beethoven') | Predicted:  Classical | Actual: Classical
+Track: (u'Beethoven : Symphony No.7 in A major Op.92 : I Poco sostenuto - Vivace', u'Ludwig van Beethoven') | Predicted:  Classical | Actual: Classical
+Track: (u'Concerto for Orchestra, BB 123: I. Introduzione: Andante non troppo - Allegro vivace', u'B\xe9la Bart\xf3k') | Predicted:  Classical | Actual: Classical
+Track: (u'Violin Concerto BWV 1042 in E Major: Violin Concerto BWV 1042 in E Major: I. Allegro', u'Johann Sebastian Bach') | Predicted:  Classical | Actual: Classical
+Track: (u'Unaccompanied Cello Suite No. 1 in G Major, BWV 1007: Pr\xe9lude', u'Johann Sebastian Bach') | Predicted:  Classical | Actual: Classical
+Track: (u'The People United Will Never Be Defeated! - 36 Variations on \xa1El pueblo unido jam\xe1s ser\xe1 vencido!: Var. 36 - Improvisation', u'Frederic Rzewski') | Predicted:  Classical | Actual: Classical
+Track: (u'Symphony in G Minor, Op. 6, No. 6, W. C12: I. Allegro', u'Johann Christian Bach') | Predicted:  Classical | Actual: Classical
+Track: (u'Concierto de Aranjuez for Guitar and Orchestra: 2. Adagio', u'Joaqu\xedn Rodrigo') | Predicted:  Classical | Actual: Classical
+Track: (u'Symphony No. 4 in E-Flat Major, WAB 104, "Romantic": I. Bewegt, nicht zu schnell - Live', u'Anton Bruckner') | Predicted:  Classical | Actual: Classical
+Track: (u'Suite espa\xf1ola, Op.47: Sevilla (Sevillanas)', u'Isaac Alb\xe9niz') | Predicted:  Classical | Actual: Classical
+Track: (u'Les Baricades Mist\xe9rieuses (6e ordre)', u'Fran\xe7ois Couperin') | Predicted:  Classical | Actual: Classical
+Track: (u'Nocturne No.1 in B flat minor, Op.9 No.1', u'Fr\xe9d\xe9ric Chopin') | Predicted:  Classical | Actual: Classical
+Track: (u"Chopin : 24 Preludes Op.28 : No.15 in D flat major, 'Raindrop'", u'Fr\xe9d\xe9ric Chopin') | Predicted:  Classical | Actual: Classical
