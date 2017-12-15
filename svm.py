@@ -11,6 +11,9 @@ import itertools
 import csv
 from sklearn.metrics import confusion_matrix
 import time
+import matplotlib
+matplotlib.use('Agg')
+import seaborn as sns
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
 MAX_ITERS = 1000
@@ -191,6 +194,9 @@ def trainForEachPlaylist(seed_playlists_w_audio_features):
         writer.writerow(correct_for_each_playlist)
     y_pred = svm_res
     conf_mat = confusion_matrix(y_true, y_pred)
+    conf_mat_plot = sns.heatmap(conf_mat.T, square=True, annot=True, fmt='d', cbar=False, 
+                xticklabels=["Classical", "Country", "Lit", "Sensual"], yticklabels=["Classical", "Country", "Lit", "Sensual"]).set_title("Confusion matrix for SVM")
+    conf_mat_plot.figure.savefig("confusion-matrix-svm.png")
 
     with open('confusion-matrix-svm.csv', 'w') as f:
         f.write(np.array2string(conf_mat, separator=', '))

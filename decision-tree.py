@@ -11,7 +11,15 @@ import itertools
 import csv
 from sklearn.metrics import confusion_matrix
 import time
-
+from sklearn.externals.six import StringIO  
+from IPython.display import Image
+import matplotlib
+matplotlib.use('Agg')
+import pydotplus
+import seaborn as sns
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
 MAX_ITERS = 1000
@@ -182,7 +190,7 @@ if __name__ == '__main__':
             features_list = findsubsets(audio_features_list, subset_size)
             for features in features_list:
                 # print features
-                for split in range(1, 30):
+                for split in range(2, 30):
                     dt = tree.DecisionTreeClassifier(min_samples_split=split) # parameter is optional
                     dt.fit(df_train[list(features)],df_train['original_playlist_id']) #category is playlist ID
                     predictions = dt.predict(df_test[list(features)])
@@ -239,9 +247,19 @@ if __name__ == '__main__':
         print y_true, y_pred
         conf_mat = confusion_matrix(y_true, y_pred)
         tree.export_graphviz(max_dt, out_file='tree.dot') 
-        with open('confusion-matrix-decision-tree.csv', 'w') as f:
-            f.write(np.array2string(conf_mat, separator=', '))
-        
+        # with open('confusion-matrix-decision-tree.csv', 'w') as f:
+        #     f.write(np.array2string(conf_mat, separator=', '))
+        # dot_data = StringIO()
+        # tree.export_graphviz(max_dt, out_file=dot_data,  
+        #         filled=True, rounded=True,
+        #         special_characters=True, impurity=False, 
+        #         proportion = True, class_names=max_dt.classes_)
+        # graph = pydotplus.graph_from_dot_data(dot_data.getvalue())  
+        # graph.write_png("colored-tree.png")
+
+        conf_mat_plot = sns.heatmap(conf_mat.T, square=True, annot=True, fmt='d', cbar=False, 
+                    xticklabels=["Classical", "Country", "Lit", "Sensual"], yticklabels=["Classical", "Country", "Lit", "Sensual"]).set_title("Confusion matrix for Decision Tree")
+        conf_mat_plot.figure.savefig("confusion-matrix-decision-tree.png")
 
     else:
         print "Can't get token for", username
