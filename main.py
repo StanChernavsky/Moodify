@@ -7,6 +7,7 @@ import spotipy.util as util
 import random
 import math
 import csv
+import time
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness', 'release_decade', 'explicit']
@@ -19,7 +20,7 @@ tracks_dict = {}
 playlist_id_to_name = {}
 track_to_correct_playlist = {}
 
-playlist_titles = ["Lit-copy", "Classical-copy", "XXX-copy", "Country-copy", "Clusterfuck-copy"]
+playlist_titles = ["Lit", "Classical", "XXX", "Country", "Clusterfuck"]
 centroid_to_original_playlist = {}
 original_playlist_lengths = {}
 
@@ -45,7 +46,7 @@ def process_playlists(sp, username, playlists):
             else:
                 print "added", playlist['name']
             playlist_id_to_name[playlist['id']] = playlist['name']
-            if playlist['name'] == "Clusterfuck-copy":
+            if playlist['name'] == "Clusterfuck":
                 if playlist['id'] not in new_tracks:
                     new_tracks[playlist['id']] = []
                 results = sp.user_playlist(username, playlist['id'], fields="tracks,next")
@@ -55,26 +56,26 @@ def process_playlists(sp, username, playlists):
                 new_tracks[playlist['id']] = track_ids
                 for i, track_id in enumerate(track_ids):
                     if i < 25:
-                        track_to_correct_playlist[track_id] = "Classical-copy"
+                        track_to_correct_playlist[track_id] = "Country"
                     elif i < 50:
-                        track_to_correct_playlist[track_id] = "Country-copy"
+                        track_to_correct_playlist[track_id] = "XXX"
                     elif i < 75:
-                        track_to_correct_playlist[track_id] = "Lit-copy"
+                        track_to_correct_playlist[track_id] = "Lit"
                     else:
-                        track_to_correct_playlist[track_id] = "XXX-copy"
+                        track_to_correct_playlist[track_id] = "Classical"
 
                 while tracks['next']:
                     tracks = sp.next(tracks)
                     track_ids = getTrackIds(tracks)
                     for i, track_id in enumerate(track_ids):
-                        if i < 8:
-                            track_to_correct_playlist[track_id] = "Classical-copy"
-                        elif i < 16:
-                            track_to_correct_playlist[track_id] = "Country-copy"
-                        elif i < 24:
-                            track_to_correct_playlist[track_id] = "Lit-copy"
+                        if i < 25:
+                            track_to_correct_playlist[track_id] = "Country"
+                        elif i < 50:
+                            track_to_correct_playlist[track_id] = "XXX"
+                        elif i < 75:
+                            track_to_correct_playlist[track_id] = "Lit"
                         else:
-                            track_to_correct_playlist[track_id] = "XXX-copy"
+                            track_to_correct_playlist[track_id] = "Classical"
                     new_tracks[playlist['id']].append(track_ids)
 
                 continue
@@ -316,6 +317,7 @@ if __name__ == '__main__':
         sys.exit()
 
     token = util.prompt_for_user_token(username)
+    start = time.time()
 
     if token:
         sp = client.Spotify(auth=token)
@@ -368,7 +370,7 @@ if __name__ == '__main__':
 
 
             #compare assignment with prev assignment, break if same
-
+        true_positives_dict = {}
         print "******************* final result ******************* after", iter_idx, "iterations"
         for i, p in enumerate(playlist_for_centroid):
             true_positive = 0
@@ -390,12 +392,28 @@ if __name__ == '__main__':
                         print "added true_positive\n"
                         true_positive += 1
                         song_set.add(track['id'])
-
+            
             print "True Positive #: " + str(true_positive)
             print "Original Total #: " + str(original_playlist_lengths[centroid_to_original_playlist[i]])
             print "Accuracy: " + str(true_positive /(float) (original_playlist_lengths[centroid_to_original_playlist[i]]))
+            true_positives_dict["centroid-" + str(i)] = str(true_positive /(float) (original_playlist_lengths[centroid_to_original_playlist[i]]))
             print "********* average, variance dictionary *********"
             print computeCentroid(i, p, False)
             print "******************************************************************"
+
+         with open('true-positives-clustering.csv', 'w') as csvfile:
+            fieldnames = ["centroid-0", "centroid-1", "centroid-2", "centroid-3"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+            writer.writeheader()
+            writer.writerow(correct_for_each_playlist)
+    y_pred = svm_res
+    conf_mat = confusion_matrix(y_true, y_pred)
+
+    with open('confusion-matrix-svm.csv', 'w') as f:
+        f.write(np.array2string(conf_mat, separator=', '))
+
     else:
         print "Can't get token for", username
+    end = time.time()
+    print "TIME ELAPSED:", end - start

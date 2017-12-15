@@ -10,6 +10,7 @@ from sklearn import tree, linear_model
 import itertools
 import csv
 from sklearn.metrics import confusion_matrix
+import time
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
@@ -91,16 +92,16 @@ def get_audio_features_for_playlists(sp, playlists):
             if audio_features[0] is None:
                 print "audio features is empty:", playlist_id, playlist_id_to_name[playlist_id], track_id, tracks_dict[track_id]
             audio_features[0]['original_playlist_id'] = playlist_id
-
+            
             if playlist_id_to_name[playlist_id] == "Clusterfuck":
-                if i < 8:
-                    audio_features[0]['correct_playlist'] = "Classical"
-                elif i < 16:
+                if i < 25:
                     audio_features[0]['correct_playlist'] = "Country"
-                elif i < 24:
+                elif i < 50:
+                    audio_features[0]['correct_playlist'] = "XXX"
+                elif i < 75:
                     audio_features[0]['correct_playlist'] = "Lit"
                 else:
-                    audio_features[0]['correct_playlist'] = "XXX"
+                    audio_features[0]['correct_playlist'] = "Classical"
                 i += 1
 
 
@@ -191,7 +192,7 @@ if __name__ == '__main__':
         sys.exit()
 
     token = util.prompt_for_user_token(username)
-
+    start = time.time()
     if token:
         sp = client.Spotify(auth=token)
         playlists = sp.user_playlists(username)
@@ -205,7 +206,7 @@ if __name__ == '__main__':
             trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title)
 
         for entry_key in correct_for_each_playlist:
-            correct_for_each_playlist[entry_key] /= 8.0
+            correct_for_each_playlist[entry_key] /= 25.0
 
         print correct_for_each_playlist
         with open('true-positives-log-reg.csv', 'w') as csvfile:
@@ -214,8 +215,7 @@ if __name__ == '__main__':
 
             writer.writeheader()
             writer.writerow(correct_for_each_playlist)
-    
-        
-
     else:
         print "Can't get token for", username
+    end = time.time()
+    print "TIME ELAPSED", end - start

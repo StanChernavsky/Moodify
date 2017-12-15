@@ -10,6 +10,7 @@ from sklearn import tree
 import itertools
 import csv
 from sklearn.metrics import confusion_matrix
+import time
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
@@ -94,13 +95,13 @@ def get_audio_features_for_playlists(sp, playlists):
 
             if playlist_id_to_name[playlist_id] == "Clusterfuck":
                 if i < 25:
-                    audio_features[0]['correct_playlist'] = "Classical"
-                elif i < 50:
                     audio_features[0]['correct_playlist'] = "Country"
+                elif i < 50:
+                    audio_features[0]['correct_playlist'] = "XXX"
                 elif i < 75:
                     audio_features[0]['correct_playlist'] = "Lit"
                 else:
-                    audio_features[0]['correct_playlist'] = "XXX"
+                    audio_features[0]['correct_playlist'] = "Classical"
                 i += 1
 
 
@@ -210,7 +211,7 @@ if __name__ == '__main__':
         print "max accuracy:", max_accuracy, "| max split:", max_split, "| max features:", max_features
         
         correct_for_each_playlist = {"Lit":0, "Classical":0, "XXX":0, "Country":0}
-        y_true = [0] * 32
+        y_true = [0] * 100
 
         i = 0
         for index, row in max_predictions.iterrows():
@@ -222,7 +223,7 @@ if __name__ == '__main__':
             i += 1
 
         for entry_key in correct_for_each_playlist:
-            correct_for_each_playlist[entry_key] /= 8.0
+            correct_for_each_playlist[entry_key] /= 25.0
         with open('true-positives-decision-tree.csv', 'w') as csvfile:
             fieldnames = ["Lit", "Classical", "XXX", "Country"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
