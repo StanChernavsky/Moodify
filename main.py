@@ -54,11 +54,11 @@ def process_playlists(sp, username, playlists):
                 track_ids = getTrackIds(tracks)
                 new_tracks[playlist['id']] = track_ids
                 for i, track_id in enumerate(track_ids):
-                    if i < 8:
+                    if i < 25:
                         track_to_correct_playlist[track_id] = "Classical-copy"
-                    elif i < 16:
+                    elif i < 50:
                         track_to_correct_playlist[track_id] = "Country-copy"
-                    elif i < 24:
+                    elif i < 75:
                         track_to_correct_playlist[track_id] = "Lit-copy"
                     else:
                         track_to_correct_playlist[track_id] = "XXX-copy"

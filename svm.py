@@ -10,7 +10,7 @@ from sklearn import tree, linear_model, svm
 import itertools
 import csv
 from sklearn.metrics import confusion_matrix
-
+import time
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
 MAX_ITERS = 1000
@@ -37,6 +37,7 @@ def process_playlists(sp, username, playlists):
     new_tracks = {}
     k_so_far = 0
     for playlist in playlists['items']:
+        print playlist['name']
         if playlist['owner']['id'] == username:
             if playlist['name'] not in playlist_titles:
                 continue
@@ -93,13 +94,13 @@ def get_audio_features_for_playlists(sp, playlists):
 
             if playlist_id_to_name[playlist_id] == "Clusterfuck":
                 if i < 25:
-                    audio_features[0]['correct_playlist'] = "Classical"
-                elif i < 50:
                     audio_features[0]['correct_playlist'] = "Country"
+                elif i < 50:
+                    audio_features[0]['correct_playlist'] = "XXX"
                 elif i < 75:
                     audio_features[0]['correct_playlist'] = "Lit"
                 else:
-                    audio_features[0]['correct_playlist'] = "XXX"
+                    audio_features[0]['correct_playlist'] = "Classical"
                 i += 1
 
 
@@ -131,6 +132,7 @@ def introduceNewTracks(new_tracks):
         #TODO
 
 def trainForEachPlaylist(seed_playlists_w_audio_features):
+    print seed_playlists_w_audio_features
     df_train = pd.DataFrame()
     df_train_label = pd.DataFrame()
 
@@ -164,7 +166,7 @@ def trainForEachPlaylist(seed_playlists_w_audio_features):
     i = 0
     correct = 0
     correct_for_each_playlist = {"Lit":0, "Classical":0, "XXX":0, "Country":0}
-    y_true = [0] * 32
+    y_true = [0] * 100
     for idx, df_test_row in df_test.iterrows():
         print tracks_dict[df_test_row['id']], "|||", \
         "correct: ", df_test_row['correct_playlist'], "|||", \
@@ -175,10 +177,10 @@ def trainForEachPlaylist(seed_playlists_w_audio_features):
             correct += 1
         i += 1
     
-    print "# CORRECT:", correct, "ACCURACY SCORE:", float(correct)/32
+    print "# CORRECT:", correct, "ACCURACY SCORE:", float(correct)/100
 
     for entry_key in correct_for_each_playlist:
-        correct_for_each_playlist[entry_key] /= 8.0
+        correct_for_each_playlist[entry_key] /= 25.0
 
     print correct_for_each_playlist
     with open('true-positives-svm.csv', 'w') as csvfile:
@@ -204,10 +206,13 @@ if __name__ == '__main__':
 
     token = util.prompt_for_user_token(username)
 
+    start = time.time()
     if token:
         sp = client.Spotify(auth=token)
         playlists = sp.user_playlists(username)
+        print "playlists", playlists
         (new_tracks, processed_playlists) = process_playlists(sp, username, playlists)
+        print "new_tracks", new_tracks, "processed_playlists", processed_playlists
 
         #dict from playlist id to a list of track audio features
         seed_playlists_w_audio_features = get_audio_features_for_playlists(sp, processed_playlists)
@@ -215,6 +220,7 @@ if __name__ == '__main__':
 
         #for playlist_title in playlist_titles:
         trainForEachPlaylist(seed_playlists_w_audio_features)
-
     else:
         print "Can't get token for", username
+    end = time.time()
+    print "TIME ELAPSED:", end - start
