@@ -12,6 +12,7 @@ import csv
 from sklearn.metrics import confusion_matrix
 import time
 from sklearn.ensemble import RandomForestClassifier
+import seaborn as sns
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
