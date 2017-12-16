@@ -6,12 +6,11 @@ import sys
 import client as client
 import spotipy.util as util
 import random
-from sklearn import tree
+from sklearn import tree, linear_model
 import itertools
 import csv
 from sklearn.metrics import confusion_matrix
 import time
-from sklearn.ensemble import RandomForestClassifier
 
 
 audio_features_list = [u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']
@@ -23,6 +22,7 @@ tracks_dict = {}
 
 playlist_titles = ["Lit", "Classical", "XXX", "Country", "Clusterfuck"]
 playlist_id_to_name = {}
+correct_for_each_playlist = {"Lit":0, "Classical":0, "XXX":0, "Country":0}
 
 def getTrackIds(tracks):
     track_ids = []
@@ -71,12 +71,11 @@ def process_playlists(sp, username, playlists):
                 tracks = sp.next(tracks)
                 all_playlists[playlist['id']].append(getTrackIds(tracks))
             # k_so_far += 1
-    ######print "************************************************"
-    ######print new_tracks, all_playlists
+    print "************************************************"
     return (new_tracks, all_playlists)
 
 # dict from playlist to track IDs
-# return: dict from playlist id to a list of [dicts that hold audio features] for each track
+# return: dict from playlist id to a list of track audio features
 def get_audio_features_for_playlists(sp, playlists):
     playlist_dict = {}
     for playlist_id in playlists:
@@ -93,7 +92,7 @@ def get_audio_features_for_playlists(sp, playlists):
             if audio_features[0] is None:
                 print "audio features is empty:", playlist_id, playlist_id_to_name[playlist_id], track_id, tracks_dict[track_id]
             audio_features[0]['original_playlist_id'] = playlist_id
-
+            
             if playlist_id_to_name[playlist_id] == "Clusterfuck":
                 if i < 25:
                     audio_features[0]['correct_playlist'] = "Country"
@@ -133,6 +132,56 @@ def introduceNewTracks(new_tracks):
         playlist_for_centroid[idx].append(track)
         #TODO
 
+def trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title):
+    if playlist_title == "Clusterfuck":
+        return
+    print "************************* TRAINING A CLASSIFIER FOR:", playlist_title, "*******************"
+    df_train = pd.DataFrame()
+    df_train_label = pd.DataFrame()
+
+    for playlist_key in seed_playlists_w_audio_features:
+        for track_idx, track_elem in enumerate(seed_playlists_w_audio_features[playlist_key]):
+            #track_row = pd.DataFrame.from_dict(seed_playlists_w_audio_features[playlist_key][track_idx], index = [i])
+            track_row = pd.Series(seed_playlists_w_audio_features[playlist_key][track_idx])
+            # track_row = track_row.assign(original_playlist=pd.Series(playlist_key).values)
+            df_train = df_train.append(track_row, ignore_index=True)
+            df_train_label = df_train_label.append(pd.Series(playlist_id_to_name[playlist_key] == playlist_title), ignore_index=True)
+
+    df_train = df_train[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
+
+    # print "DF TRAIN LABEL", playlist_title, "********"
+    # print df_train_label
+
+    df_test_with_audio_features = get_audio_features_for_playlists(sp, new_tracks)
+    df_test = pd.DataFrame()
+    df_test_label = pd.DataFrame()
+    for playlist_key in df_test_with_audio_features:
+        for track_idx, track_elem in enumerate(df_test_with_audio_features[playlist_key]):
+            track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
+            df_test = df_test.append(track_row, ignore_index=True)
+            df_test_label = df_test_label.append(pd.Series(playlist_id_to_name[playlist_key] == playlist_title), ignore_index=True)
+    df_test_only_features = df_test[[u'danceability', u'valence', u'energy', u'tempo', u'loudness', u'acousticness', u'speechiness', u'liveness']]
+    
+    log_reg = linear_model.LogisticRegression(C=1e5)
+
+    log_reg.fit(df_train, df_train_label.values.ravel())
+
+    print "DF PREDICT RESULTS FOR", playlist_title, "********"
+    log_reg_predictions = log_reg.predict(df_test_only_features)
+    print log_reg_predictions
+    print log_reg.score(df_test_only_features, df_test_label.values.ravel())
+
+    i = 0
+    print "LENGTH OF DF_TEST_LABEL", len(df_test_label)
+    for idx, df_test_row in df_test.iterrows():
+        if log_reg_predictions[i] == 1.0 and df_test_row['correct_playlist'] == playlist_title:
+            correct_for_each_playlist[playlist_title] += 1
+        i += 1
+
+    
+
+
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -143,123 +192,30 @@ if __name__ == '__main__':
         sys.exit()
 
     token = util.prompt_for_user_token(username)
-
+    start = time.time()
     if token:
         sp = client.Spotify(auth=token)
         playlists = sp.user_playlists(username)
-
-        # create a dict of playlist ID to a list of track IDs
         (new_tracks, processed_playlists) = process_playlists(sp, username, playlists)
 
-        # dict from playlist id to a list of dicts of track_idx : audio features dict
+        #dict from playlist id to a list of track audio features
         seed_playlists_w_audio_features = get_audio_features_for_playlists(sp, processed_playlists)
-        # print seed_playlists_w_audio_features
+        print seed_playlists_w_audio_features
 
-        print "******ABOUT TO START DATAFRAME******"
+        for playlist_title in playlist_titles:
+            trainForEachPlaylist(seed_playlists_w_audio_features, playlist_title)
 
-        df_train = pd.DataFrame()
+        for entry_key in correct_for_each_playlist:
+            correct_for_each_playlist[entry_key] /= 25.0
 
-        for playlist_key in seed_playlists_w_audio_features:
-            for track_idx, track_elem in enumerate(seed_playlists_w_audio_features[playlist_key]):
-                #track_row = pd.DataFrame.from_dict(seed_playlists_w_audio_features[playlist_key][track_idx], index = [i])
-                track_row = pd.Series(seed_playlists_w_audio_features[playlist_key][track_idx])
-                # track_row = track_row.assign(original_playlist=pd.Series(playlist_key).values)
-                df_train = df_train.append(track_row, ignore_index=True)
+        print correct_for_each_playlist
+        with open('true-positives-log-reg.csv', 'w') as csvfile:
+            fieldnames = ["Lit", "Classical", "XXX", "Country"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-        
-        print "DF TRAIN ********"
-        print df_train
-
-        df_test_with_audio_features = get_audio_features_for_playlists(sp, new_tracks)
-        df_test = pd.DataFrame()
-        for playlist_key in df_test_with_audio_features:
-            for track_idx, track_elem in enumerate(df_test_with_audio_features[playlist_key]):
-                track_row = pd.Series(df_test_with_audio_features[playlist_key][track_idx])
-                df_test = df_test.append(track_row, ignore_index=True)
-
-        print "DF TEST *********"
-        print df_test
-
-        ########Now we have a DataFrame where each row is a different track###########
-        ######RANDOM FOREST STUFF############
-
-        # Train the Classifier to take training features and learn how they
-        # relate to actual output y
-        clf = RandomForestClassifier(n_jobs=2, random_state=0)
-        
-        # Train the classifier
-        clf.fit(df_train[audio_features_list], df_train['original_playlist_id'])
-
-        # Apply classifier to test data
-        predictions = clf.predict(df_test[audio_features_list])
-
-        # Show how with what probability the classifier thinks each track 
-        # should belong to each category
-        print "********PREDICTION PROBABILITIES*********"
-        print clf.predict_proba(df_test[audio_features_list])
-
-        # Convert playlist_ids to names
-        for i, id in enumerate(predictions):
-            predictions[i] = playlist_id_to_name[id].encode('UTF-8')
-
-        # Evaluate classifier
-        print "*********PLAYLIST PREDICTIONS FOR TEST SET**********"
-        print predictions
-
-        print "*********CORRECT PLAYLISTS FOR TEST SET*********"
-        test_correct_playlists = df_test["correct_playlist"].tolist()
-        print test_correct_playlists
-
-        correct_count_classical = 0
-        correct_count_lit = 0
-        correct_count_sensual = 0
-        correct_count_country = 0
-        total_count_classical = 0
-        total_count_lit = 0
-        total_count_sensual = 0
-        total_count_country = 0
-
-        num_tracks = len(test_correct_playlists)
-        for i in range(num_tracks):
-            if test_correct_playlists[i] == "Classical":
-                if predictions[i] == test_correct_playlists[i]:
-                    correct_count_classical += 1
-                total_count_classical += 1
-
-            if test_correct_playlists[i] == "Lit":
-                if predictions[i] == test_correct_playlists[i]:
-                    correct_count_lit += 1
-                total_count_lit += 1
-
-            if test_correct_playlists[i] == "XXX":
-                if predictions[i] == test_correct_playlists[i]:
-                    correct_count_sensual += 1
-                total_count_sensual += 1
-
-
-            if test_correct_playlists[i] == "Country":
-                if predictions[i] == test_correct_playlists[i]:
-                    correct_count_country += 1
-                total_count_country += 1
-
-        correct_count_classical /= float(total_count_classical)
-        correct_count_lit /= float(total_count_lit)
-        correct_count_sensual /= float(total_count_sensual)
-        correct_count_country /= float(total_count_country)
-
-        print "*********ACCURACY FOR RANDOM FOREST************"
-        print "True positive classical: ", correct_count_classical
-        print "True positive lit: ", correct_count_lit
-        print "True positive sensual: ", correct_count_sensual
-        print "True positive country: ", correct_count_country
-
-        # Confusion matrix
-        y_true = test_correct_playlists
-        y_pred = predictions
-        conf_mat = confusion_matrix(y_true, y_pred)
-        conf_mat_plot = sns.heatmap(conf_mat.T, square=True, annot=True, fmt='d', cbar=False, 
-                    xticklabels=["Classical", "Country", "Lit", "Sensual"], yticklabels=["Classical", "Country", "Lit", "Sensual"]).set_title("Confusion matrix for Random Forest")
-        conf_mat_plot.figure.savefig("confusion-matrix-random-forest.png")
-
+            writer.writeheader()
+            writer.writerow(correct_for_each_playlist)
     else:
         print "Can't get token for", username
+    end = time.time()
+    print "TIME ELAPSED", end - start
